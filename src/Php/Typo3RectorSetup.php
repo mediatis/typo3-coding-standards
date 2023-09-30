@@ -27,7 +27,7 @@ class Typo3RectorSetup extends RectorSetup
     {
         $sets = parent::sets();
         array_push($sets, ...[
-            Typo3LevelSetList::UP_TO_TYPO3_11,
+            Typo3LevelSetList::UP_TO_TYPO3_12,
             // Typo3SetList::DATABASE_TO_DBAL,
             // SetList::CODE_QUALITY,
             // SetList::DEAD_CODE,
