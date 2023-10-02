@@ -18,6 +18,9 @@
         }
     ],
     "homepage": "https://www.mediatis.de",
+    "bin": [
+        "bin/mediatis-typo3-coding-standards-setup"
+    ],
     "require": {
         "php": "^8.1",
         "ergebnis/composer-normalize": "^2.28.3",
