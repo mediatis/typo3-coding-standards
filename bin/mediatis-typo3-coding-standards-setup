@@ -6,6 +6,7 @@ $targetPackageDirectory = realpath($binDirectory . '/../..');
 $codingStandardsPackageDirectory = realpath(__DIR__ . '/..');
 $requiredFolderPaths = ['Classes', 'Tests'];
 $examplePackagePath = 'example-extension';
+$typo3Version = $argv[1] ?? 12;
 
 class MediatisCodingStandardsSetup
 {
@@ -14,6 +15,7 @@ class MediatisCodingStandardsSetup
         protected string $codingStandardsPackageDirectory,
         protected array $requiredFolderPaths,
         protected string $examplePackageDirectory,
+        protected int $typo3Version
     ) {
     }
 
@@ -78,10 +80,10 @@ class MediatisCodingStandardsSetup
         }
     }
 
-    protected function updateFile(string $filePath, ?array $config = null): void
+    protected function updateFile(string $filePath, ?string $targetFilePath = null, ?array $config = null): void
     {
         $sourcePath = $this->getSourcePath($filePath);
-        $targetPath = $this->getTargetPath($filePath);
+        $targetPath = $this->getTargetPath($targetFilePath ?? $filePath);
         $sourceContents = file_get_contents($sourcePath);
         if ($sourceContents === false) {
             throw new Exception(sprintf('File "%s" not found!', $sourcePath));
@@ -117,7 +119,14 @@ class MediatisCodingStandardsSetup
 
     protected function setupRectorConfig(): void
     {
-        $this->updateFile('rector.php');
+        $sourceFilePath = match($this->typo3Version) {
+            11 => 'rector-typo3-11.php',
+            12 => 'rector-typo3-12.php',
+        };
+        $this->updateFile(
+            $sourceFilePath,
+            'rector.php'
+        );
     }
 
     protected function setupPhpStanConfig(): void
@@ -132,7 +141,7 @@ class MediatisCodingStandardsSetup
 
     protected function setupComposerJson(): void
     {
-        $this->updateFile('composer.json', [
+        $this->updateFile('composer.json', 'composer.json', [
             'scripts' => true,
             'scripts-descriptions' => true,
         ]);
@@ -170,7 +179,8 @@ try {
         $targetPackageDirectory,
         $codingStandardsPackageDirectory,
         $requiredFolderPaths,
-        $examplePackagePath
+        $examplePackagePath,
+        $typo3Version
     );
     $codingStandardsSetup->setup();
     print(' success!' . PHP_EOL);

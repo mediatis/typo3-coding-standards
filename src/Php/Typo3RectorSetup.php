@@ -2,6 +2,7 @@
 
 namespace Mediatis\Typo3CodingStandards\Php;
 
+use Exception;
 use Mediatis\CodingStandards\Php\RectorSetup;
 use Rector\Config\RectorConfig;
 // use Rector\Core\Configuration\Option;
@@ -15,11 +16,12 @@ use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
 
 class Typo3RectorSetup extends RectorSetup
 {
+    protected static int $typo3Version = 12;
+
     protected static function paths(string $packagePath): array
     {
         return [
-            $packagePath . '/Classes',
-            $packagePath . '/Tests',
+            $packagePath, // check the whole extension package, not just Classes and Tests
         ];
     }
 
@@ -27,7 +29,11 @@ class Typo3RectorSetup extends RectorSetup
     {
         $sets = parent::sets();
         array_push($sets, ...[
-            Typo3LevelSetList::UP_TO_TYPO3_12,
+            match (static::$typo3Version) {
+                11 => Typo3LevelSetList::UP_TO_TYPO3_11,
+                12 => Typo3LevelSetList::UP_TO_TYPO3_12,
+                default => throw new Exception(sprintf('unkonwn typo3 version "%s"', static::$typo3Version)),
+            },
             // Typo3SetList::DATABASE_TO_DBAL,
             // SetList::CODE_QUALITY,
             // SetList::DEAD_CODE,
@@ -75,8 +81,9 @@ class Typo3RectorSetup extends RectorSetup
         return $criteria;
     }
 
-    public static function setup(RectorConfig $rectorConfig, string $packagePath): void
+    public static function setup(RectorConfig $rectorConfig, string $packagePath, int $typo3Version = 12): void
     {
+        static::$typo3Version = $typo3Version;
         parent::setup($rectorConfig, $packagePath);
 
         // If you want to override the number of spaces for your typoscript files you can define it here, the default value is 4
