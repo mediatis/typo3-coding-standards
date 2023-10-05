@@ -6,7 +6,7 @@ $targetPackageDirectory = realpath($binDirectory . '/../..');
 $codingStandardsPackageDirectory = realpath(__DIR__ . '/..');
 $requiredFolderPaths = ['Classes', 'Tests'];
 $examplePackagePath = 'example-extension';
-$typo3Version = $argv[1] ?? 12;
+$typo3Version = $argv[1] ?? null;
 
 class MediatisCodingStandardsSetup
 {
@@ -175,6 +175,9 @@ print(PHP_EOL);
 
 print('Setting up configuration...');
 try {
+    if ($typo3Version === null) {
+        throw new Exception('Please provide a TYPO3 version (11 or 12). Use the lowest one your extension supports.');
+    }
     $codingStandardsSetup = new MediatisCodingStandardsSetup(
         $targetPackageDirectory,
         $codingStandardsPackageDirectory,
