@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 
+$supportedTypo3Versions = [11, 12];
 $binDirectory = $_composer_bin_dir ?? __DIR__ . '/../../../../bin';
 $targetPackageDirectory = realpath($binDirectory . '/../..');
 $codingStandardsPackageDirectory = realpath(__DIR__ . '/..');
@@ -176,7 +177,11 @@ print(PHP_EOL);
 print('Setting up configuration...');
 try {
     if ($typo3Version === null) {
-        throw new Exception('Please provide a TYPO3 version (11 or 12). Use the lowest one your extension supports.');
+        throw new Exception(sprintf('Please provide a TYPO3 version (%s). Use the lowest one your extension supports.', implode(' or ', $supportedTypo3Versions)));
+    } elseif (!is_numeric($typo3Version)) {
+        throw new Exception('Provided TYPO3 version does not seem to be numeric. Use the lowest one your extension supports.');
+    } elseif (!in_array($typo3Version, $supportedTypo3Versions, false)) {
+        throw new Exception(sprintf('Provided TYPO3 version "%s" is not supported. Supported versions: %s', $typo3Version, implode(', ', $supportedTypo3Versions)));
     }
     $codingStandardsSetup = new MediatisCodingStandardsSetup(
         $targetPackageDirectory,
