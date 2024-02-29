@@ -1,13 +1,14 @@
 #!/usr/bin/env php
 <?php
+use Symfony\Component\Yaml\Yaml;
 
 $supportedTypo3Versions = [11, 12];
+$supportedTypo3PackageKeys = ['typo3/cms','typo3/cms-core'];
 $binDirectory = $_composer_bin_dir ?? __DIR__ . '/../../../../bin';
 $targetPackageDirectory = realpath($binDirectory . '/../..');
 $codingStandardsPackageDirectory = realpath(__DIR__ . '/..');
 $requiredFolderPaths = ['Classes', 'Tests'];
 $examplePackagePath = 'example-extension';
-$typo3Version = $argv[1] ?? null;
 
 class MediatisCodingStandardsSetup
 {
@@ -16,10 +17,21 @@ class MediatisCodingStandardsSetup
         protected string $codingStandardsPackageDirectory,
         protected array $requiredFolderPaths,
         protected string $examplePackageDirectory,
-        protected int $typo3Version
+        protected array $supportedTypo3Versions,
+        protected array $supportedTypo3PackageKeys,
     ) {
+
     }
 
+    protected function extractVersions(string $constraint): array {
+        preg_match_all('/\^(\d+(\.\d+)?)/', $constraint, $matches);
+        $versions = $matches[1];
+        // Sort versions in ascending order and return
+        usort($versions, function($a, $b) {
+            return version_compare($a, $b);
+        });
+        return $versions;
+    }
     protected function updateFolderStructure(string $filePath): void
     {
         if (!str_starts_with($filePath, $this->targetPackageDirectory)) {
@@ -39,6 +51,30 @@ class MediatisCodingStandardsSetup
             throw new Exception('No extension key found in composer.json');
         }
         return $data['extra']['typo3/cms']['extension-key'];
+    }
+
+    protected function getDependencyVersionConstraintsFromComposerData(string $key, string $type = "full"): ?array
+    {
+        $versions = null;
+        $composerFilePath = $this->targetPackageDirectory . '/composer.json';
+        $composerFileContents = file_get_contents($composerFilePath);
+        if ($composerFileContents === false) {
+            throw new Exception(sprintf('File "%s" not found!', $composerFilePath));
+        }
+        $composerFileContentsAsArray = json_decode($composerFileContents, true, 512, JSON_THROW_ON_ERROR);
+        if (isset($composerFileContentsAsArray['require'][$key])) {
+            switch ($type) {
+                case 'major':
+                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key]);
+                    foreach ($versions as $key => $number) {
+                        $versions[$key] = intval($number);
+                    }
+                    break;
+                default:
+                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key]);
+            }
+        }
+        return $versions;
     }
 
     protected function updateFileContentsComposerJson(string $sourceContents, string $targetContents, array $config): string
@@ -70,12 +106,45 @@ class MediatisCodingStandardsSetup
 
         return json_encode($targetData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . PHP_EOL;
     }
+    protected function updateFileContentsYaml(string $sourceContents, string $targetContents, array $config): string
+    {
+        $sourceData = Yaml::parse($sourceContents);
+        foreach ($config as $key => $merge) {
+            if (!isset($sourceData[$key])) {
+                throw new Exception(sprintf('Key "%s" not found in source data!', $key));
+            }
+            if ($merge && isset($targetData[$key]) && is_array($targetData[$key])) {
+                foreach ($sourceData[$key] as $configKey => $configValue) {
+                    if (array_key_exists($configKey, $targetData[$key])) {
+                        unset($targetData[$key][$configKey]);
+                    }
+                    $targetData[$key][$configKey] = $configValue;
+                }
+            } else {
+                $targetData[$key] = $sourceData[$key];
+            }
+        }
+        $versionConstraints = [];
+        foreach ($this->supportedTypo3PackageKeys as $key) {
+            $versionConstraints = $this->getDependencyVersionConstraintsFromComposerData($key);
+            if ($versionConstraints) {
+                break;
+            }
+        }
+        foreach ($versionConstraints as $index => $value) {
+            $targetData['strategy']['typo3-version'][$index] = $value;
+        }
+
+        return json_encode($targetData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+    }
 
     protected function updateFileContents(string $sourceContents, string $targetContents, string $filePath, array $config): string
     {
         switch ($filePath) {
             case 'composer.json':
                 return $this->updateFileContentsComposerJson($sourceContents, $targetContents, $config);
+            case '.github/workflows/ci.yml':
+                return $this->updateFileContentsYaml($sourceContents, $targetContents, $config);
             default:
                 throw new Exception(sprintf('No information how to process "%s" found!'), $filePath);
         }
@@ -120,14 +189,23 @@ class MediatisCodingStandardsSetup
 
     protected function setupRectorConfig(): void
     {
-        $sourceFilePath = match($this->typo3Version) {
-            11 => 'rector-typo3-11.php',
-            12 => 'rector-typo3-12.php',
-        };
-        $this->updateFile(
-            $sourceFilePath,
-            'rector.php'
-        );
+        foreach ($this->supportedTypo3PackageKeys as $key) {
+            $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, 'major');
+            if ($versionConstraint) {
+                $versionConstraint = reset($versionConstraint); // Only need lowest supported version
+                break;
+            }
+        }
+        if ($versionConstraint) {
+            $sourceFilePath = match($versionConstraint) {
+                11 => 'rector-typo3-11.php',
+                12 => 'rector-typo3-12.php',
+            };
+            $this->updateFile(
+                $sourceFilePath,
+                'rector.php'
+            );
+        }
     }
 
     protected function setupPhpStanConfig(): void
@@ -137,7 +215,10 @@ class MediatisCodingStandardsSetup
 
     protected function setupGithubPipeline(): void
     {
-        $this->updateFile('.github/workflows/ci.yml');
+        $this->updateFile('.github/workflows/ci.yml', null, [
+            'typo3-version' => true,
+            'steps' => true,
+        ]);
     }
 
     protected function setupComposerJson(): void
@@ -176,19 +257,13 @@ print(PHP_EOL);
 
 print('Setting up configuration...');
 try {
-    if ($typo3Version === null) {
-        throw new Exception(sprintf('Please provide a TYPO3 version (%s). Use the lowest one your extension supports.', implode(' or ', $supportedTypo3Versions)));
-    } elseif (!is_numeric($typo3Version)) {
-        throw new Exception('Provided TYPO3 version does not seem to be numeric. Use the lowest one your extension supports.');
-    } elseif (!in_array($typo3Version, $supportedTypo3Versions, false)) {
-        throw new Exception(sprintf('Provided TYPO3 version "%s" is not supported. Supported versions: %s', $typo3Version, implode(', ', $supportedTypo3Versions)));
-    }
     $codingStandardsSetup = new MediatisCodingStandardsSetup(
         $targetPackageDirectory,
         $codingStandardsPackageDirectory,
         $requiredFolderPaths,
         $examplePackagePath,
-        $typo3Version
+        $supportedTypo3Versions,
+        $supportedTypo3PackageKeys
     );
     $codingStandardsSetup->setup();
     print(' success!' . PHP_EOL);
