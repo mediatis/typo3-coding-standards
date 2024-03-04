@@ -119,6 +119,8 @@ class MediatisCodingStandardsSetup
     protected function updateFileContentsYaml(string $sourceContents, string $targetContents, array $config): string
     {
         $sourceData = Symfony\Component\Yaml\Yaml::parse($sourceContents);
+        $targetData = Symfony\Component\Yaml\Yaml::parse($targetContents);
+
         foreach ($config as $key => $merge) {
             if (!isset($sourceData[$key])) {
                 throw new Exception(sprintf('Key "%s" not found in source data!', $key));
@@ -226,8 +228,7 @@ class MediatisCodingStandardsSetup
     protected function setupGithubPipeline(): void
     {
         $this->updateFile('.github/workflows/ci.yml', null, [
-            'typo3-version' => true,
-            'steps' => true,
+            'jobs' => []
         ]);
     }
 
