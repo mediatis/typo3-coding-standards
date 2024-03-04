@@ -1,7 +1,17 @@
 #!/usr/bin/env php
 <?php
-use Symfony\Component\Yaml\Yaml;
-
+function includeIfExists(string $file): bool
+{
+    return file_exists($file) && include $file;
+}
+if (
+    !includeIfExists(__DIR__ . '/../../../autoload.php') &&
+    !includeIfExists(__DIR__ . '/../vendor/autoload.php') &&
+    !includeIfExists(__DIR__ . '/../../../../../vendor/autoload.php')
+) {
+    fwrite(STDERR, 'Install dependencies using Composer.'.PHP_EOL);
+    exit(1);
+}
 $supportedTypo3Versions = [11, 12];
 $supportedTypo3PackageKeys = ['typo3/cms','typo3/cms-core'];
 $binDirectory = $_composer_bin_dir ?? __DIR__ . '/../../../../bin';
@@ -108,7 +118,7 @@ class MediatisCodingStandardsSetup
     }
     protected function updateFileContentsYaml(string $sourceContents, string $targetContents, array $config): string
     {
-        $sourceData = Yaml::parse($sourceContents);
+        $sourceData = Symfony\Component\Yaml\Yaml::parse($sourceContents);
         foreach ($config as $key => $merge) {
             if (!isset($sourceData[$key])) {
                 throw new Exception(sprintf('Key "%s" not found in source data!', $key));
