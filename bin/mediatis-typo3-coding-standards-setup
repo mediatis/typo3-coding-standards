@@ -12,8 +12,10 @@ if (
     fwrite(STDERR, 'Install dependencies using Composer.'.PHP_EOL);
     exit(1);
 }
-$supportedTypo3Versions = [11, 12];
 $supportedTypo3PackageKeys = ['typo3/cms','typo3/cms-core'];
+$supportedTypo3Versions = [11.5, 12.4];
+$supportedPhpVersions = [8.1, 8.2];
+$supportedPhpPackageKeys = ['php'];
 $binDirectory = $_composer_bin_dir ?? __DIR__ . '/../../../../bin';
 $targetPackageDirectory = realpath($binDirectory . '/../..');
 $codingStandardsPackageDirectory = realpath(__DIR__ . '/..');
@@ -27,19 +29,31 @@ class MediatisCodingStandardsSetup
         protected string $codingStandardsPackageDirectory,
         protected array $requiredFolderPaths,
         protected string $examplePackageDirectory,
-        protected array $supportedTypo3Versions,
         protected array $supportedTypo3PackageKeys,
+        protected array $supportedTypo3Versions,
+        protected array $supportedPhpPackageKeys,
+        protected array $supportedPhpVersions,
     ) {
 
     }
 
-    protected function extractVersions(string $constraint): array {
-        preg_match_all('/\^(\d+(\.\d+)?)/', $constraint, $matches);
-        $versions = $matches[1];
-        // Sort versions in ascending order and return
-        usort($versions, function($a, $b) {
-            return version_compare($a, $b);
-        });
+    protected function extractVersions(string $constraint, array $allowedVersions): array {
+        preg_match('/\^(\d+\.\d+)/', $constraint, $matches);
+        $latestVersion = $matches[1];
+
+        // Ensure the latest version is within the allowed versions range
+        if (version_compare($latestVersion, end($allowedVersions), '>')) {
+            $latestVersion = end($allowedVersions);
+        }
+
+        // Extract all versions up to the latest allowed version
+        $versions = [];
+        foreach ($allowedVersions as $version) {
+            if (version_compare($version, $latestVersion, '>=')) {
+                $versions[] = $version;
+            }
+        }
+
         return $versions;
     }
     protected function updateFolderStructure(string $filePath): void
@@ -63,7 +77,7 @@ class MediatisCodingStandardsSetup
         return $data['extra']['typo3/cms']['extension-key'];
     }
 
-    protected function getDependencyVersionConstraintsFromComposerData(string $key, string $type = "full"): ?array
+    protected function getDependencyVersionConstraintsFromComposerData(string $key, $allowedVersions, string $type = "full"): ?array
     {
         $versions = null;
         $composerFilePath = $this->targetPackageDirectory . '/composer.json';
@@ -75,13 +89,13 @@ class MediatisCodingStandardsSetup
         if (isset($composerFileContentsAsArray['require'][$key])) {
             switch ($type) {
                 case 'major':
-                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key]);
+                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
                     foreach ($versions as $key => $number) {
-                        $versions[$key] = intval($number);
+                        $versions[$key] = $number;
                     }
                     break;
                 default:
-                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key]);
+                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
             }
         }
         return $versions;
@@ -121,33 +135,21 @@ class MediatisCodingStandardsSetup
         $sourceData = Symfony\Component\Yaml\Yaml::parse($sourceContents);
         $targetData = Symfony\Component\Yaml\Yaml::parse($targetContents);
 
+        if (!$this->checkKeysRecursive($config, $sourceData)) {
+            throw new Exception(sprintf('Configured key not found in source data!'));
+        }
+        \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule($sourceData, $config);
+
         foreach ($config as $key => $merge) {
-            if (!isset($sourceData[$key])) {
-                throw new Exception(sprintf('Key "%s" not found in source data!', $key));
-            }
-            if ($merge && isset($targetData[$key]) && is_array($targetData[$key])) {
-                foreach ($sourceData[$key] as $configKey => $configValue) {
-                    if (array_key_exists($configKey, $targetData[$key])) {
-                        unset($targetData[$key][$configKey]);
-                    }
-                    $targetData[$key][$configKey] = $configValue;
-                }
+
+            if ($this->checkKeysRecursive($config, $targetData)) {
+                \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule($targetData[$key], $sourceData[$key]);
             } else {
                 $targetData[$key] = $sourceData[$key];
             }
         }
-        $versionConstraints = [];
-        foreach ($this->supportedTypo3PackageKeys as $key) {
-            $versionConstraints = $this->getDependencyVersionConstraintsFromComposerData($key);
-            if ($versionConstraints) {
-                break;
-            }
-        }
-        foreach ($versionConstraints as $index => $value) {
-            $targetData['strategy']['typo3-version'][$index] = $value;
-        }
 
-        return json_encode($targetData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+        return Symfony\Component\Yaml\Yaml::dump($targetData, 99);
     }
 
     protected function updateFileContents(string $sourceContents, string $targetContents, string $filePath, array $config): string
@@ -166,14 +168,14 @@ class MediatisCodingStandardsSetup
     {
         $sourcePath = $this->getSourcePath($filePath);
         $targetPath = $this->getTargetPath($targetFilePath ?? $filePath);
-        $sourceContents = file_get_contents($sourcePath);
+        $sourceContents = file_exists($sourcePath) ? file_get_contents($sourcePath) : '';
         if ($sourceContents === false) {
-            throw new Exception(sprintf('File "%s" not found!', $sourcePath));
+            //throw new Exception(sprintf('File "%s" not found!', $sourcePath));
         }
         if ($config !== null) {
-            $targetContents = file_get_contents($targetPath);
+            $targetContents = file_exists($targetPath) ? file_get_contents($targetPath) : '';
             if ($targetContents === false) {
-                throw new Exception(sprintf('File "%s" not found!', $targetPath));
+                //throw new Exception(sprintf('File "%s" not found!', $targetPath));
             }
             $targetContents = $this->updateFileContents($sourceContents, $targetContents, $filePath, $config);
         } else {
@@ -202,14 +204,14 @@ class MediatisCodingStandardsSetup
     protected function setupRectorConfig(): void
     {
         foreach ($this->supportedTypo3PackageKeys as $key) {
-            $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, 'major');
+            $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, $this->supportedTypo3Versions, 'major');
             if ($versionConstraint) {
                 $versionConstraint = reset($versionConstraint); // Only need lowest supported version
                 break;
             }
         }
         if ($versionConstraint) {
-            $sourceFilePath = match($versionConstraint) {
+            $sourceFilePath = match(intval($versionConstraint)) {
                 11 => 'rector-typo3-11.php',
                 12 => 'rector-typo3-12.php',
             };
@@ -227,9 +229,62 @@ class MediatisCodingStandardsSetup
 
     protected function setupGithubPipeline(): void
     {
-        $this->updateFile('.github/workflows/ci.yml', null, [
-            'jobs' => []
-        ]);
+        $typo3VersionConstraints = [];
+        $phpVersionConstraints = [];
+        foreach ($this->supportedTypo3PackageKeys as $key) {
+            $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, $this->supportedTypo3Versions);
+            if (!empty($versionConstraint)) {
+                $typo3VersionConstraints = $versionConstraint;
+                break;
+            }
+        }
+
+        foreach ($this->supportedPhpPackageKeys as $key) {
+            $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, $this->supportedPhpVersions);
+            if (!empty($versionConstraint)) {
+                $phpVersionConstraints = $versionConstraint;
+                break;
+            }
+        }
+
+        $this->updateFile('.github/workflows/ci.yml', null,
+            [
+                'jobs' => [
+                    'php-lint' => [
+                        'strategy' => [
+                            'matrix' => [
+                                'php-version' => $phpVersionConstraints
+                            ]
+                        ]
+                    ],
+                    'code-quality' => [
+                        'strategy' => [
+                            'matrix' => [
+                                'php-version' => $phpVersionConstraints,
+                                'typo3-version' => $typo3VersionConstraints
+                            ]
+                        ]
+                    ],
+                ]
+            ]
+        );
+    }
+
+    protected function checkKeysRecursive($config, $data): bool {
+        foreach ($config as $key => $value) {
+            if (is_array($value)) {
+                if (!isset($data[$key]) || !is_array($data[$key])) {
+                    return false;
+                }
+                // Recursively check nested arrays
+                $this->checkKeysRecursive($value, $data[$key]);
+            } else {
+                if (!isset($data[$key])) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     protected function setupComposerJson(): void
@@ -273,8 +328,10 @@ try {
         $codingStandardsPackageDirectory,
         $requiredFolderPaths,
         $examplePackagePath,
+        $supportedTypo3PackageKeys,
         $supportedTypo3Versions,
-        $supportedTypo3PackageKeys
+        $supportedPhpPackageKeys,
+        $supportedPhpVersions
     );
     $codingStandardsSetup->setup();
     print(' success!' . PHP_EOL);
