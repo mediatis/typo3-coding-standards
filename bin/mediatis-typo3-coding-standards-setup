@@ -50,7 +50,7 @@ class MediatisCodingStandardsSetup
         $versions = [];
         foreach ($allowedVersions as $version) {
             if (version_compare($version, $latestVersion, '>=')) {
-                $versions[] = $version;
+                $versions[] = (string)$version;
             }
         }
 
@@ -251,18 +251,18 @@ class MediatisCodingStandardsSetup
 
         $this->updateFile('.gitlab-ci.yml', null,
             [
+				'stages' => true,
                 'php-lint' => [
                     'parallel' => [
 						'matrix' => [
-							'php_version' => $phpVersionConstraints
+							['php_version' => $phpVersionConstraints]
 						]
                     ],
 				],
 				'code-quality' => [
 					'parallel' => [
 						'matrix' => [
-							'php_version' => $phpVersionConstraints,
-							'typo3_version' => $typo3VersionConstraints
+							['php_version' => $phpVersionConstraints],
 						]
 					]
 				]
@@ -270,6 +270,7 @@ class MediatisCodingStandardsSetup
         );
 		$this->updateFile('.github/workflows/ci.yml', null,
 			[
+				'on' => true,
 				'jobs' => [
 					'php-lint' => [
 						'strategy' => [
