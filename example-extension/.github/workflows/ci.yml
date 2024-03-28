@@ -19,7 +19,7 @@ jobs:
       - name: 'Install PHP'
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '${{ matrix.php-version }}'
+          php_version: '${{ matrix.php_version }}'
           coverage: none
           tools: composer:v2.4
       - name: 'Show the Composer configuration'
@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: []
+        php_version: []
   code-quality:
     name: 'Code quality checks'
     runs-on: ubuntu-22.04
@@ -39,7 +39,7 @@ jobs:
       - name: 'Install PHP'
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '${{ matrix.php-version }}'
+          php_version: '${{ matrix.php_version }}'
           coverage: none
           tools: composer:v2.4
       - name: 'Show Composer version'
@@ -49,9 +49,9 @@ jobs:
       - name: 'Cache dependencies installed with composer'
         uses: actions/cache@v3
         with:
-          key: "php${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.json') }}"
+          key: "php${{ matrix.php_version }}-composer-${{ hashFiles('**/composer.json') }}"
           path: ~/.cache/composer
-          restore-keys: "php${{ matrix.php-version }}-composer-\n"
+          restore-keys: "php${{ matrix.php_version }}-composer-\n"
       - name: 'Install Composer dependencies'
         run: 'composer install --no-progress'
       - name: 'Run command'
@@ -66,5 +66,5 @@ jobs:
           - 'php:rector'
           - 'php:cs-fixer'
           - 'php:stan'
-        php-version: []
-        typo3-version: []
+        php_version: []
+        typo3_version: []

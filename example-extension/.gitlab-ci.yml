@@ -1,0 +1,49 @@
+stages:
+  - lint
+  - code_quality
+php-lint:
+  before_script:
+    - set -xe
+    - apt-get update -yqq
+    - apt-get install git libzip-dev unzip parallel libxml2-utils wget wait-for-it libicu-dev -yqq
+    - php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/local/bin/ --filename=composer
+    - chmod +x /usr/local/bin/composer
+    - cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
+    - awk '/^error_reporting = E_ALL/{print "error_reporting = E_ALL & ~E_DEPRECATED"; next}1' /usr/local/etc/php/php.ini > temp.ini && mv temp.ini /usr/local/etc/php/php.ini
+  image: php:${php_version}
+  stage: lint
+  needs: [ ]
+  script:
+    - 'composer ci:${command}'
+  parallel:
+    matrix:
+       php_version: {}
+       command:
+        - 'php:lint'
+
+code-quality:
+  before_script:
+    - set -xe
+    - apt-get update -yqq
+    - apt-get install git libzip-dev unzip parallel libxml2-utils wget wait-for-it libicu-dev -yqq
+    - php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/local/bin/ --filename=composer
+    - chmod +x /usr/local/bin/composer
+    - composer --version
+    - cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
+    - awk '/^error_reporting = E_ALL/{print "error_reporting = E_ALL & ~E_DEPRECATED"; next}1' /usr/local/etc/php/php.ini > temp.ini && mv temp.ini /usr/local/etc/php/php.ini
+    - composer install --no-progress --ignore-platform-req=ext-intl
+  image: php:${php_version}
+  stage: code_quality
+  needs: [ ]
+  script:
+    - 'composer ci:${command}'
+  parallel:
+    matrix:
+        php_version: {}
+        command:
+          - 'composer:normalize'
+          - 'composer:psr-verify'
+          - 'json:lint'
+          - 'php:rector'
+          - 'php:cs-fixer'
+          - 'php:stan'

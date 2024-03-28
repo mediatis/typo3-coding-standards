@@ -159,6 +159,8 @@ class MediatisCodingStandardsSetup
                 return $this->updateFileContentsComposerJson($sourceContents, $targetContents, $config);
             case '.github/workflows/ci.yml':
                 return $this->updateFileContentsYaml($sourceContents, $targetContents, $config);
+            case '.gitlab-ci.yml':
+                return $this->updateFileContentsYaml($sourceContents, $targetContents, $config);
             default:
                 throw new Exception(sprintf('No information how to process "%s" found!'), $filePath);
         }
@@ -227,7 +229,7 @@ class MediatisCodingStandardsSetup
         $this->updateFile('phpstan.neon');
     }
 
-    protected function setupGithubPipeline(): void
+    protected function setupCiPipeline(): void
     {
         $typo3VersionConstraints = [];
         $phpVersionConstraints = [];
@@ -247,27 +249,46 @@ class MediatisCodingStandardsSetup
             }
         }
 
-        $this->updateFile('.github/workflows/ci.yml', null,
+        $this->updateFile('.gitlab-ci.yml', null,
             [
-                'jobs' => [
-                    'php-lint' => [
-                        'strategy' => [
-                            'matrix' => [
-                                'php-version' => $phpVersionConstraints
-                            ]
-                        ]
+                'php-lint' => [
+                    'parallel' => [
+						'matrix' => [
+							'php_version' => $phpVersionConstraints
+						]
                     ],
-                    'code-quality' => [
-                        'strategy' => [
-                            'matrix' => [
-                                'php-version' => $phpVersionConstraints,
-                                'typo3-version' => $typo3VersionConstraints
-                            ]
-                        ]
-                    ],
-                ]
+				],
+				'code-quality' => [
+					'parallel' => [
+						'matrix' => [
+							'php_version' => $phpVersionConstraints,
+							'typo3_version' => $typo3VersionConstraints
+						]
+					]
+				]
             ]
         );
+		$this->updateFile('.github/workflows/ci.yml', null,
+			[
+				'jobs' => [
+					'php-lint' => [
+						'strategy' => [
+							'matrix' => [
+								'php_version' => $phpVersionConstraints
+							]
+						]
+					],
+					'code-quality' => [
+						'strategy' => [
+							'matrix' => [
+								'php_version' => $phpVersionConstraints,
+								'typo3_version' => $typo3VersionConstraints
+							]
+						]
+					],
+				]
+			]
+		);
     }
 
     protected function checkKeysRecursive($config, $data): bool {
@@ -309,7 +330,7 @@ class MediatisCodingStandardsSetup
         $this->setupCsFixerConfig();
         $this->setupRectorConfig();
         $this->setupPhpStanConfig();
-        $this->setupGithubPipeline();
+        $this->setupCIPipeline();
         $this->setupComposerJson();
         $this->setupRequiredFolders();
     }
