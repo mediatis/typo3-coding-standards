@@ -6,8 +6,7 @@ php-lint:
     key:
       files:
         - composer.lock
-      prefix:
-        - php${php_version}-
+      prefix: 'php${php_version}-'
     paths:
       - ./cache/composer
   before_script:
@@ -32,8 +31,7 @@ code-quality:
     key:
       files:
         - composer.lock
-      prefix:
-        - php${php_version}-
+      prefix: 'php${php_version}-'
     paths:
       - ./cache/composer
   before_script:
