@@ -38,22 +38,15 @@ class MediatisCodingStandardsSetup
     }
 
     protected function extractVersions(string $constraint, array $allowedVersions): array {
-        preg_match('/\^(\d+\.\d+)/', $constraint, $matches);
-        $latestVersion = $matches[1];
-
-        // Ensure the latest version is within the allowed versions range
-        if (version_compare($latestVersion, end($allowedVersions), '>')) {
-            $latestVersion = end($allowedVersions);
-        }
-
-        // Extract all versions up to the latest allowed version
         $versions = [];
-        foreach ($allowedVersions as $version) {
-            if (version_compare($version, $latestVersion, '>=')) {
-                $versions[] = (string)$version;
+        $versionParser = new \Composer\Semver\VersionParser();
+        $constraints = $versionParser->parseConstraints($constraint);
+        $semVer = new \Composer\Semver\Semver();
+        foreach ($allowedVersions as $allowedVersion) {
+            if ($semVer::satisfies($allowedVersion, $constraints->getPrettyString())) {
+                $versions[] = $allowedVersion;
             }
         }
-
         return $versions;
     }
     protected function updateFolderStructure(string $filePath): void
@@ -79,7 +72,7 @@ class MediatisCodingStandardsSetup
 
     protected function getDependencyVersionConstraintsFromComposerData(string $key, $allowedVersions, string $type = "full"): ?array
     {
-        $versions = null;
+        $versions = [];
         $composerFilePath = $this->targetPackageDirectory . '/composer.json';
         $composerFileContents = file_get_contents($composerFilePath);
         if ($composerFileContents === false) {
@@ -221,6 +214,8 @@ class MediatisCodingStandardsSetup
                 $sourceFilePath,
                 'rector.php'
             );
+        } else {
+            throw new Exception('Unable to set up rector due to version mismatch. Supported TYPO3 versions are: ' . implode(', ', $this->supportedTypo3Versions));
         }
     }
 
@@ -249,52 +244,56 @@ class MediatisCodingStandardsSetup
             }
         }
 
-        $this->updateFile('.gitlab-ci.yml', null,
-            [
-				'stages' => true,
-                'php-lint' => [
-                    'parallel' => [
-						'matrix' => [
-							[
-                                'php_version' => $phpVersionConstraints
+        if ($typo3VersionConstraints and $phpVersionConstraints) {
+            $this->updateFile('.gitlab-ci.yml', null,
+                [
+                    'stages' => true,
+                    'php-lint' => [
+                        'parallel' => [
+                            'matrix' => [
+                                [
+                                    'php_version' => $phpVersionConstraints
+                                ]
                             ]
-						]
+                        ],
                     ],
-				],
-				'code-quality' => [
-					'parallel' => [
-						'matrix' => [
-                            [
-                                'php_version' => $phpVersionConstraints,
-                                'typo3_version' => $typo3VersionConstraints,
+                    'code-quality' => [
+                        'parallel' => [
+                            'matrix' => [
+                                [
+                                    'php_version' => $phpVersionConstraints,
+                                    'typo3_version' => $typo3VersionConstraints,
+                                ]
                             ]
-						]
-					]
-				]
-            ]
-        );
-		$this->updateFile('.github/workflows/ci.yml', null,
-			[
-				'on' => true,
-				'jobs' => [
-					'php-lint' => [
-						'strategy' => [
-							'matrix' => [
-                                'php_version' => $phpVersionConstraints
-							]
-						]
-					],
-					'code-quality' => [
-						'strategy' => [
-							'matrix' => [
-                                'php_version' => $phpVersionConstraints,
-                                'typo3_version' => $typo3VersionConstraints,
-							]
-						]
-					],
-				]
-			]
-		);
+                        ]
+                    ]
+                ]
+            );
+            $this->updateFile('.github/workflows/ci.yml', null,
+                [
+                    'on' => true,
+                    'jobs' => [
+                        'php-lint' => [
+                            'strategy' => [
+                                'matrix' => [
+                                    'php_version' => $phpVersionConstraints
+                                ]
+                            ]
+                        ],
+                        'code-quality' => [
+                            'strategy' => [
+                                'matrix' => [
+                                    'php_version' => $phpVersionConstraints,
+                                    'typo3_version' => $typo3VersionConstraints,
+                                ]
+                            ]
+                        ],
+                    ]
+                ]
+            );
+        } else {
+            throw new Exception('Unable to set up CI workflows due to version mismatch. Supported TYPO3 versions are: ' . implode(', ', $this->supportedTypo3Versions) . ' and Supported PHP versions are: ' . implode(', ', $this->supportedPhpVersions));
+        }
     }
 
     protected function checkKeysRecursive($config, $data): bool {
