@@ -255,14 +255,19 @@ class MediatisCodingStandardsSetup
                 'php-lint' => [
                     'parallel' => [
 						'matrix' => [
-							['php_version' => $phpVersionConstraints]
+							[
+                                'php_version' => $phpVersionConstraints
+                            ]
 						]
                     ],
 				],
 				'code-quality' => [
 					'parallel' => [
 						'matrix' => [
-							['php_version' => $phpVersionConstraints],
+                            [
+                                'php_version' => $phpVersionConstraints,
+                                'typo3_version' => $typo3VersionConstraints,
+                            ]
 						]
 					]
 				]
@@ -275,15 +280,15 @@ class MediatisCodingStandardsSetup
 					'php-lint' => [
 						'strategy' => [
 							'matrix' => [
-								'php_version' => $phpVersionConstraints
+                                'php_version' => $phpVersionConstraints
 							]
 						]
 					],
 					'code-quality' => [
 						'strategy' => [
 							'matrix' => [
-								'php_version' => $phpVersionConstraints,
-								'typo3_version' => $typo3VersionConstraints
+                                'php_version' => $phpVersionConstraints,
+                                'typo3_version' => $typo3VersionConstraints,
 							]
 						]
 					],

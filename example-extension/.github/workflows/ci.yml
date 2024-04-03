@@ -45,22 +45,23 @@ jobs:
       - name: 'Cache dependencies installed with composer'
         uses: actions/cache@v3
         with:
-          key: "php${{ matrix.php_version }}-composer-${{ hashFiles('**/composer.json') }}"
+          key: "php${{ matrix.php_version }}-typo3${{ matrix.php_version }}"
           path: ~/.cache/composer
           restore-keys: "php${{ matrix.php_version }}-composer-\n"
       - name: 'Install Composer dependencies'
-        run: 'composer install --no-progress'
+        run: |
+            composer require typo3/cms-core ^${{ matrix.typo3_version }} --no-progress
+            composer install --no-progress
       - name: 'Run command'
-        run: 'composer ci:${{ matrix.command }}'
+        run: |
+          composer ci:composer:psr-verify
+          composer ci:json:lint
+          composer ci:php:rector
+          composer ci:php:cs-fixer
+          composer ci:php:stan
     strategy:
       fail-fast: false
       matrix:
-        command:
-          - 'composer:normalize'
-          - 'composer:psr-verify'
-          - 'json:lint'
-          - 'php:rector'
-          - 'php:cs-fixer'
-          - 'php:stan'
         php_version: []
         typo3_version: []
+
