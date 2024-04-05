@@ -3,4 +3,5 @@ parameters:
   paths:
     - ../../../../Classes
     - ../../../../Tests
+    - ../../../../bin
   reportUnmatchedIgnoredErrors: false

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ExampleVendor\ExampleExtension\Tests\Unit;
 
-use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use ExampleVendor\ExampleExtension\Math;
+use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 class MathTest extends UnitTestCase
 {

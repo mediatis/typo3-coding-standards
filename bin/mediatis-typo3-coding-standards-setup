@@ -1,18 +1,28 @@
-#!/usr/bin/env php
+<?php
+
+use Composer\Semver\Semver;
+use Composer\Semver\VersionParser;
+use Symfony\Component\Yaml\Yaml;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
+
+?>
+    #!/usr/bin/env php
 <?php
 function includeIfExists(string $file): bool
 {
     return file_exists($file) && include $file;
 }
+
 if (
-    !includeIfExists(__DIR__ . '/../../../autoload.php') &&
-    !includeIfExists(__DIR__ . '/../vendor/autoload.php') &&
-    !includeIfExists(__DIR__ . '/../../../../../vendor/autoload.php')
+    !includeIfExists(__DIR__ . '/../../../autoload.php')
+    && !includeIfExists(__DIR__ . '/../vendor/autoload.php')
+    && !includeIfExists(__DIR__ . '/../../../../../vendor/autoload.php')
 ) {
-    fwrite(STDERR, 'Install dependencies using Composer.'.PHP_EOL);
+    fwrite(STDERR, 'Install dependencies using Composer.' . PHP_EOL);
     exit(1);
 }
-$supportedTypo3PackageKeys = ['typo3/cms','typo3/cms-core'];
+
+$supportedTypo3PackageKeys = ['typo3/cms', 'typo3/cms-core'];
 $supportedTypo3Versions = [11.5, 12.4];
 $supportedPhpVersions = [8.1, 8.2];
 $supportedPhpPackageKeys = ['php'];
@@ -21,9 +31,15 @@ $targetPackageDirectory = realpath($binDirectory . '/../..');
 $codingStandardsPackageDirectory = realpath(__DIR__ . '/..');
 $requiredFolderPaths = ['Classes', 'Tests'];
 $examplePackagePath = 'example-extension';
-
 class MediatisCodingStandardsSetup
 {
+    /**
+     * @param array<string> $requiredFolderPaths
+     * @param array<string> $supportedTypo3PackageKeys
+     * @param array<float> $supportedTypo3Versions
+     * @param array<string> $supportedPhpPackageKeys
+     * @param array<float> $supportedPhpVersions
+     */
     public function __construct(
         protected string $targetPackageDirectory,
         protected string $codingStandardsPackageDirectory,
@@ -34,26 +50,34 @@ class MediatisCodingStandardsSetup
         protected array $supportedPhpPackageKeys,
         protected array $supportedPhpVersions,
     ) {
-
     }
 
-    protected function extractVersions(string $constraint, array $allowedVersions): array {
+    /**
+     * @param array<float> $allowedVersions
+     *
+     * @return array<float>
+     */
+    protected function extractVersions(string $constraint, array $allowedVersions): array
+    {
         $versions = [];
-        $versionParser = new \Composer\Semver\VersionParser();
+        $versionParser = new VersionParser();
         $constraints = $versionParser->parseConstraints($constraint);
-        $semVer = new \Composer\Semver\Semver();
+        $semVer = new Semver();
         foreach ($allowedVersions as $allowedVersion) {
             if ($semVer::satisfies($allowedVersion, $constraints->getPrettyString())) {
                 $versions[] = $allowedVersion;
             }
         }
+
         return $versions;
     }
+
     protected function updateFolderStructure(string $filePath): void
     {
         if (!str_starts_with($filePath, $this->targetPackageDirectory)) {
             throw new Exception(sprintf('file path "%s" does not seem to be within the package directory.', $filePath));
         }
+
         $pathParts = explode('/', $filePath);
         array_pop($pathParts);
         $folderPath = implode('/', $pathParts);
@@ -62,15 +86,23 @@ class MediatisCodingStandardsSetup
         }
     }
 
+    /**
+     * @param array<mixed> $data
+     *
+     * @return string
+     *
+     * @throws Exception
+     */
     protected function getExtensionKeyFromComposerData(array $data): string
     {
         if (!isset($data['extra']['typo3/cms']['extension-key'])) {
             throw new Exception('No extension key found in composer.json');
         }
+
         return $data['extra']['typo3/cms']['extension-key'];
     }
 
-    protected function getDependencyVersionConstraintsFromComposerData(string $key, $allowedVersions, string $type = "full"): ?array
+    protected function getDependencyVersionConstraintsFromComposerData(string $key, $allowedVersions, string $type = 'full'): ?array
     {
         $versions = [];
         $composerFilePath = $this->targetPackageDirectory . '/composer.json';
@@ -78,22 +110,29 @@ class MediatisCodingStandardsSetup
         if ($composerFileContents === false) {
             throw new Exception(sprintf('File "%s" not found!', $composerFilePath));
         }
+
         $composerFileContentsAsArray = json_decode($composerFileContents, true, 512, JSON_THROW_ON_ERROR);
         if (isset($composerFileContentsAsArray['require'][$key])) {
-            switch ($type) {
-                case 'major':
-                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
-                    foreach ($versions as $key => $number) {
-                        $versions[$key] = $number;
-                    }
-                    break;
-                default:
-                    $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
+            if ($type == 'major') {
+                $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
+                foreach ($versions as $key => $number) {
+                    $versions[$key] = $number;
+                }
+            } else {
+                $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
             }
         }
+
         return $versions;
     }
 
+    /**
+     * @param array<mixed> $config
+     *
+     * @return string
+     *
+     * @throws JsonException
+     */
     protected function updateFileContentsComposerJson(string $sourceContents, string $targetContents, array $config): string
     {
         $sourceData = json_decode($sourceContents, true, 512, JSON_THROW_ON_ERROR);
@@ -103,11 +142,13 @@ class MediatisCodingStandardsSetup
             if (!isset($sourceData[$key])) {
                 throw new Exception(sprintf('Key "%s" not found in source data!', $key));
             }
+
             if ($merge && isset($targetData[$key]) && is_array($targetData[$key])) {
                 foreach ($sourceData[$key] as $configKey => $configValue) {
                     if (array_key_exists($configKey, $targetData[$key])) {
                         unset($targetData[$key][$configKey]);
                     }
+
                     $targetData[$key][$configKey] = $configValue;
                 }
             } else {
@@ -118,60 +159,80 @@ class MediatisCodingStandardsSetup
         $sourceExtensionKey = $this->getExtensionKeyFromComposerData($sourceData);
         $targetExtensionKey = $this->getExtensionKeyFromComposerData($targetData);
         foreach ($targetData['scripts']['link-extension'] ?? [] as $index => $value) {
-            $targetData['scripts']['link-extension'][$index] = str_replace($sourceExtensionKey, $targetExtensionKey, $value);
+            $targetData['scripts']['link-extension'][$index] = str_replace($sourceExtensionKey, $targetExtensionKey, (string)$value);
         }
 
         return json_encode($targetData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . PHP_EOL;
     }
+
+    /**
+     * @param array<mixed> $config
+     *
+     * @return string
+     *
+     * @throws Exception
+     */
     protected function updateFileContentsYaml(string $sourceContents, string $targetContents, array $config): string
     {
-        $sourceData = Symfony\Component\Yaml\Yaml::parse($sourceContents);
-        $targetData = Symfony\Component\Yaml\Yaml::parse($targetContents);
+        $sourceData = Yaml::parse($sourceContents);
+        $targetData = Yaml::parse($targetContents);
 
         if (!$this->checkKeysRecursive($config, $sourceData)) {
-            throw new Exception(sprintf('Configured key not found in source data!'));
+            throw new Exception('Configured key not found in source data!');
         }
-        \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule($sourceData, $config);
 
-        foreach ($config as $key => $merge) {
+        ArrayUtility::mergeRecursiveWithOverrule($sourceData, $config);
 
+        foreach (array_keys($config) as $key) {
             if ($this->checkKeysRecursive($config, $targetData)) {
-                \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule($targetData[$key], $sourceData[$key]);
+                ArrayUtility::mergeRecursiveWithOverrule($targetData[$key], $sourceData[$key]);
             } else {
                 $targetData[$key] = $sourceData[$key];
             }
         }
 
-        return Symfony\Component\Yaml\Yaml::dump($targetData, 99);
+        return Yaml::dump($targetData, 99);
     }
 
+    /**
+     * @param array<mixed> $config
+     *
+     * @return string
+     *
+     * @throws JsonException
+     */
     protected function updateFileContents(string $sourceContents, string $targetContents, string $filePath, array $config): string
     {
-        switch ($filePath) {
-            case 'composer.json':
-                return $this->updateFileContentsComposerJson($sourceContents, $targetContents, $config);
-            case '.github/workflows/ci.yml':
-                return $this->updateFileContentsYaml($sourceContents, $targetContents, $config);
-            case '.gitlab-ci.yml':
-                return $this->updateFileContentsYaml($sourceContents, $targetContents, $config);
-            default:
-                throw new Exception(sprintf('No information how to process "%s" found!'), $filePath);
-        }
+        return match ($filePath) {
+            'composer.json' => $this->updateFileContentsComposerJson($sourceContents, $targetContents, $config),
+            '.github/workflows/ci.yml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
+            '.gitlab-ci.yml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
+            default => throw new Exception('No information how to process "%s" found!', $filePath),
+        };
     }
 
+    /**
+     * @param array<mixed>|null $config
+     *
+     * @return void
+     *
+     * @throws JsonException
+     */
     protected function updateFile(string $filePath, ?string $targetFilePath = null, ?array $config = null): void
     {
         $sourcePath = $this->getSourcePath($filePath);
         $targetPath = $this->getTargetPath($targetFilePath ?? $filePath);
         $sourceContents = file_exists($sourcePath) ? file_get_contents($sourcePath) : '';
         if ($sourceContents === false) {
-            //throw new Exception(sprintf('File "%s" not found!', $sourcePath));
+            // throw new Exception(sprintf('File "%s" not found!', $sourcePath));
         }
+
         if ($config !== null) {
             $targetContents = file_exists($targetPath) ? file_get_contents($targetPath) : '';
             if ($targetContents === false) {
-                //throw new Exception(sprintf('File "%s" not found!', $targetPath));
+                // throw new Exception(sprintf('File "%s" not found!', $targetPath));
             }
+
             $targetContents = $this->updateFileContents($sourceContents, $targetContents, $filePath, $config);
         } else {
             $targetContents = $sourceContents;
@@ -188,7 +249,7 @@ class MediatisCodingStandardsSetup
 
     protected function getTargetPath(string $filePath): string
     {
-        return $this->targetPackageDirectory . '/'. $filePath;
+        return $this->targetPackageDirectory . '/' . $filePath;
     }
 
     protected function setupCsFixerConfig(): void
@@ -198,6 +259,7 @@ class MediatisCodingStandardsSetup
 
     protected function setupRectorConfig(): void
     {
+        $versionConstraint = null;
         foreach ($this->supportedTypo3PackageKeys as $key) {
             $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, $this->supportedTypo3Versions, 'major');
             if ($versionConstraint) {
@@ -205,8 +267,9 @@ class MediatisCodingStandardsSetup
                 break;
             }
         }
+
         if ($versionConstraint) {
-            $sourceFilePath = match(intval($versionConstraint)) {
+            $sourceFilePath = match ((int)$versionConstraint) {
                 11 => 'rector-typo3-11.php',
                 12 => 'rector-typo3-12.php',
             };
@@ -230,7 +293,7 @@ class MediatisCodingStandardsSetup
         $phpVersionConstraints = [];
         foreach ($this->supportedTypo3PackageKeys as $key) {
             $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, $this->supportedTypo3Versions);
-            if (!empty($versionConstraint)) {
+            if ($versionConstraint !== null && $versionConstraint !== []) {
                 $typo3VersionConstraints = $versionConstraint;
                 break;
             }
@@ -238,13 +301,13 @@ class MediatisCodingStandardsSetup
 
         foreach ($this->supportedPhpPackageKeys as $key) {
             $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData($key, $this->supportedPhpVersions);
-            if (!empty($versionConstraint)) {
+            if ($versionConstraint !== null && $versionConstraint !== []) {
                 $phpVersionConstraints = $versionConstraint;
                 break;
             }
         }
 
-        if ($typo3VersionConstraints and $phpVersionConstraints) {
+        if ($typo3VersionConstraints && $phpVersionConstraints) {
             $this->updateFile('.gitlab-ci.yml', null,
                 [
                     'stages' => true,
@@ -252,9 +315,9 @@ class MediatisCodingStandardsSetup
                         'parallel' => [
                             'matrix' => [
                                 [
-                                    'php_version' => $phpVersionConstraints
-                                ]
-                            ]
+                                    'php_version' => $phpVersionConstraints,
+                                ],
+                            ],
                         ],
                     ],
                     'code-quality' => [
@@ -263,10 +326,10 @@ class MediatisCodingStandardsSetup
                                 [
                                     'php_version' => $phpVersionConstraints,
                                     'typo3_version' => $typo3VersionConstraints,
-                                ]
-                            ]
-                        ]
-                    ]
+                                ],
+                            ],
+                        ],
+                    ],
                 ]
             );
             $this->updateFile('.github/workflows/ci.yml', null,
@@ -276,19 +339,19 @@ class MediatisCodingStandardsSetup
                         'php-lint' => [
                             'strategy' => [
                                 'matrix' => [
-                                    'php_version' => $phpVersionConstraints
-                                ]
-                            ]
+                                    'php_version' => $phpVersionConstraints,
+                                ],
+                            ],
                         ],
                         'code-quality' => [
                             'strategy' => [
                                 'matrix' => [
                                     'php_version' => $phpVersionConstraints,
                                     'typo3_version' => $typo3VersionConstraints,
-                                ]
-                            ]
+                                ],
+                            ],
                         ],
-                    ]
+                    ],
                 ]
             );
         } else {
@@ -296,20 +359,21 @@ class MediatisCodingStandardsSetup
         }
     }
 
-    protected function checkKeysRecursive($config, $data): bool {
+    protected function checkKeysRecursive($config, $data): bool
+    {
         foreach ($config as $key => $value) {
             if (is_array($value)) {
                 if (!isset($data[$key]) || !is_array($data[$key])) {
                     return false;
                 }
+
                 // Recursively check nested arrays
                 $this->checkKeysRecursive($value, $data[$key]);
-            } else {
-                if (!isset($data[$key])) {
-                    return false;
-                }
+            } elseif (!isset($data[$key])) {
+                return false;
             }
         }
+
         return true;
     }
 
@@ -341,13 +405,12 @@ class MediatisCodingStandardsSetup
     }
 }
 
-print(PHP_EOL);
-print('#####################################################' . PHP_EOL);
-print('#         MEDIATIS - TYPO3 CODING STANDARDS         #' . PHP_EOL);
-print('#####################################################' . PHP_EOL);
-print(PHP_EOL);
-
-print('Setting up configuration...');
+echo PHP_EOL;
+echo '#####################################################' . PHP_EOL;
+echo '#         MEDIATIS - TYPO3 CODING STANDARDS         #' . PHP_EOL;
+echo '#####################################################' . PHP_EOL;
+echo PHP_EOL;
+echo 'Setting up configuration...';
 try {
     $codingStandardsSetup = new MediatisCodingStandardsSetup(
         $targetPackageDirectory,
@@ -360,11 +423,11 @@ try {
         $supportedPhpVersions
     );
     $codingStandardsSetup->setup();
-    print(' success!' . PHP_EOL);
-    print(PHP_EOL);
+    echo ' success!' . PHP_EOL;
+    echo PHP_EOL;
 } catch (Exception $e) {
-    print(' failed!' . PHP_EOL);
-    print(PHP_EOL);
-    print('Reason: ' . $e->getMessage() . PHP_EOL);
-    print(PHP_EOL);
+    echo ' failed!' . PHP_EOL;
+    echo PHP_EOL;
+    echo 'Reason: ' . $e->getMessage() . PHP_EOL;
+    echo PHP_EOL;
 }
