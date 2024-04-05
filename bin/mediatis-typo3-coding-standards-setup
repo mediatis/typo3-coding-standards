@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 
 use Composer\Semver\Semver;
@@ -5,9 +6,6 @@ use Composer\Semver\VersionParser;
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 
-?>
-    #!/usr/bin/env php
-<?php
 function includeIfExists(string $file): bool
 {
     return file_exists($file) && include $file;
