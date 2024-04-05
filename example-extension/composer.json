@@ -24,7 +24,7 @@
         "typo3/cms-core": "^11.5 || ^12.4"
     },
     "require-dev": {
-        "mediatis/typo3-coding-standards": "dev-feature/set-typo3-version-from-composer",
+        "mediatis/typo3-coding-standards": "^2.0",
         "phpunit/phpunit": "^9.6.19",
         "typo3/testing-framework": "^7.0.4"
     },
