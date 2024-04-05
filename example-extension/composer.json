@@ -25,6 +25,7 @@
     },
     "require-dev": {
         "mediatis/typo3-coding-standards": "^1.0",
+        "phpunit/phpunit": "^9.6.19",
         "typo3/testing-framework": "^7.0.4"
     },
     "conflict": {
@@ -32,12 +33,12 @@
     },
     "autoload": {
         "psr-4": {
-            "ExampleVendor\\ExampleExtension\\": "Classes"
+            "ExampleVendor\\ExampleExtension\\": "Classes/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "ExampleVendor\\ExampleExtension\\Tests\\": "Tests"
+            "ExampleVendor\\ExampleExtension\\Tests\\": "Tests/"
         }
     },
     "config": {

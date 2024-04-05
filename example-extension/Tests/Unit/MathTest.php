@@ -7,7 +7,7 @@ namespace ExampleVendor\ExampleExtension\Tests\Unit;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 use ExampleVendor\Typo3CodingStandards\Math;
 
-class MathTest extends TestCase
+class MathTest extends UnitTestCase
 {
     public function testAddIntegers()
     {

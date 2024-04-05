@@ -51,6 +51,12 @@
             "Mediatis\\Typo3CodingStandards\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "ExampleVendor\\ExampleExtension\\": "example-extension/.Build/vendor/mediatis/typo3-coding-standards/Classes",
+            "ExampleVendor\\ExampleExtension\\Tests\\": "example-extension/.Build/vendor/mediatis/typo3-coding-standards/Tests"
+        }
+    },
     "config": {
         "allow-plugins": {
             "typo3/cms-composer-installers": true,
