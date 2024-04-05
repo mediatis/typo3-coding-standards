@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ExampleVendor\Typo3CodingStandards;
+namespace ExampleVendor\ExampleExtension;
 
 class Math
 {

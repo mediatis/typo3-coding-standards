@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ExampleVendor\ExampleExtension\Tests\Unit;
 
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
-use ExampleVendor\Typo3CodingStandards\Math;
+use ExampleVendor\ExampleExtension\Math;
 
 class MathTest extends UnitTestCase
 {
