@@ -114,7 +114,7 @@ class MediatisCodingStandardsSetup
             if ($type == 'major') {
                 $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
                 foreach ($versions as $key => $number) {
-                    $versions[$key] = $number;
+                    $versions[$key] = (int)$number;
                 }
             } else {
                 $versions = $this->extractVersions($composerFileContentsAsArray['require'][$key], $allowedVersions);
@@ -267,10 +267,7 @@ class MediatisCodingStandardsSetup
         }
 
         if ($versionConstraint) {
-            $sourceFilePath = match ((int)$versionConstraint) {
-                11 => 'rector-typo3-11.php',
-                12 => 'rector-typo3-12.php',
-            };
+            $sourceFilePath = 'rector-typo3-' . $versionConstraint . '.php';
             $this->updateFile(
                 $sourceFilePath,
                 'rector.php'
@@ -328,6 +325,16 @@ class MediatisCodingStandardsSetup
                             ],
                         ],
                     ],
+                    'code-tests' => [
+                        'parallel' => [
+                            'matrix' => [
+                                [
+                                    'php_version' => $phpVersionConstraints,
+                                    'typo3_version' => $typo3VersionConstraints,
+                                ],
+                            ],
+                        ],
+                    ],
                 ]
             );
             $this->updateFile('.github/workflows/ci.yml', null,
@@ -342,6 +349,14 @@ class MediatisCodingStandardsSetup
                             ],
                         ],
                         'code-quality' => [
+                            'strategy' => [
+                                'matrix' => [
+                                    'php_version' => $phpVersionConstraints,
+                                    'typo3_version' => $typo3VersionConstraints,
+                                ],
+                            ],
+                        ],
+                        'code-tests' => [
                             'strategy' => [
                                 'matrix' => [
                                     'php_version' => $phpVersionConstraints,
