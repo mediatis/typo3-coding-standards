@@ -58,7 +58,7 @@ class Typo3RectorSetup extends RectorSetup
             $packagePath . '/**/Resources/**/bower_components/*',
             $packagePath . '/**/Resources/**/build/*',
             $packagePath . '/**/node_modules/*',
-            // $packagePath . '/vendor/*',
+            $packagePath . '/vendor/*',
             $packagePath . '/Build/*',
             $packagePath . '/public/*',
             $packagePath . '/.github/*',

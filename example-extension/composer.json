@@ -24,27 +24,27 @@
         "typo3/cms-core": "^11.5 || ^12.4"
     },
     "require-dev": {
-        "mediatis/typo3-coding-standards": "^1.0"
+        "mediatis/typo3-coding-standards": "^2.0"
     },
     "conflict": {
         "typo3/class-alias-loader": "< 1.1.0"
     },
     "autoload": {
         "psr-4": {
-            "ExampleVendor\\ExampleExtension\\": "Classes"
+            "ExampleVendor\\ExampleExtension\\": "Classes/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "ExampleVendor\\ExampleExtension\\Tests\\": "Tests"
+            "ExampleVendor\\ExampleExtension\\Tests\\": "Tests/"
         }
     },
     "config": {
         "allow-plugins": {
-            "typo3/cms-composer-installers": true,
-            "typo3/class-alias-loader": true,
             "ergebnis/composer-normalize": true,
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
         },
         "bin-dir": ".Build/bin",
         "vendor-dir": ".Build/vendor"
@@ -107,7 +107,7 @@
             "@ci:tests:unit",
             "@ci:tests:functional"
         ],
-        "ci:tests:functional": "find 'Tests/Functional' -wholename '*Test.php' | parallel --gnu 'echo; echo \"Running functional test suite {}\"; .Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/FunctionalTests.xml {}';",
+        "ci:tests:functional": "find 'Tests/Functional' -wholename '*Test.php' | echo \"Running functional test suite {}\"; .Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/FunctionalTests.xml;",
         "ci:tests:unit": ".Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml Tests/Unit",
         "ci:yaml:lint": "find . ! -path '*.Build/*' ! -path '*node_modules/*' -regextype egrep -regex '.*.ya?ml$' | xargs -r php ./.Build/bin/yaml-lint",
         "coverage:create-directories": "mkdir -p .Build/logs .Build/coverage",
