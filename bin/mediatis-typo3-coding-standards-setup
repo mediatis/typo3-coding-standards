@@ -27,7 +27,7 @@ $supportedPhpPackageKeys = ['php'];
 $binDirectory = $_composer_bin_dir ?? __DIR__ . '/../../../../bin';
 $targetPackageDirectory = realpath($binDirectory . '/../..');
 $codingStandardsPackageDirectory = realpath(__DIR__ . '/..');
-$requiredFolderPaths = ['Classes', 'Tests'];
+$requiredFolderPaths = ['Classes', 'Tests/Unit', 'Tests/Functional'];
 $examplePackagePath = 'example-extension';
 class MediatisCodingStandardsSetup
 {
