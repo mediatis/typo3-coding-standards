@@ -1,10 +1,14 @@
+workflow:
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+        - if: $CI_COMMIT_TAG
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 stages:
     - coding-standards
 coding-standards:
     parallel:
         matrix:
             -
-                check: ['static', 'dynamic']
                 php_version: []
                 typo3_version: []
     cache:
@@ -28,4 +32,4 @@ coding-standards:
     image: 'php:${php_version}'
     stage: coding-standards
     script:
-        - 'composer ci:${check}'
+        - 'composer ci'

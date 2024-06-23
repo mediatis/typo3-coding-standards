@@ -1,4 +1,5 @@
-'on':
+name: 'Code check'
+on:
     push:
         branches:
             - main
@@ -9,14 +10,13 @@ permissions:
     contents: read
 jobs:
     coding-standards:
-        name: 'Coding standards'
+        name: 'Code check'
         runs-on: ubuntu-22.04
         strategy:
             fail-fast: false
             matrix:
-                check: [static, dynamic]
-                php_version: {}
-                typo3_version: {}
+                php_version: []
+                typo3_version: []
         steps:
             -
                 name: Checkout
@@ -46,4 +46,4 @@ jobs:
                 run: "composer require typo3/cms-core ^${{ matrix.typo3_version }} --no-progress\ncomposer install --no-progress\n"
             -
                 name: 'Run command'
-                run: "composer ci:${{ matrix.check }}\n"
+                run: "composer ci\n"
