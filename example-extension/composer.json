@@ -64,12 +64,12 @@
             "@ci:static",
             "@ci:dynamic"
         ],
-        "ci:composer:normalize": "@composer normalize --no-check-lock --dry-run",
-        "ci:composer:psr-verify": "@composer dumpautoload --optimize --strict-psr",
         "ci:composer": [
             "@ci:composer:normalize",
             "@ci:composer:psr-verify"
         ],
+        "ci:composer:normalize": "@composer normalize --no-check-lock --dry-run",
+        "ci:composer:psr-verify": "@composer dumpautoload --optimize --strict-psr",
         "ci:coverage": [
             "@ci:coverage:unit",
             "@ci:coverage:functional"
@@ -89,10 +89,10 @@
         "ci:dynamic": [
             "@ci:tests"
         ],
-        "ci:json:lint": "find . ! -path '*.Build/*' ! -path '*node_modules/*' -name '*.json' | xargs -r php .Build/bin/jsonlint -q",
         "ci:json": [
             "@ci:json:lint"
         ],
+        "ci:json:lint": "find . ! -path '*.Build/*' ! -path '*node_modules/*' -name '*.json' | xargs -r php .Build/bin/jsonlint -q",
         "ci:php": [
             "@ci:php:rector",
             "@ci:php:cs-fixer",
@@ -115,10 +115,10 @@
         ],
         "ci:tests:functional": "find 'Tests/Functional' -wholename '*Test.php' | echo \"Running functional test suite {}\"; .Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/FunctionalTests.xml;",
         "ci:tests:unit": ".Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml Tests/Unit",
-        "ci:yaml:lint": "find . ! -path '*.Build/*' ! -path '*node_modules/*' -regextype egrep -regex '.*.ya?ml$' | xargs -r php ./.Build/bin/yaml-lint",
         "ci:yaml": [
             "@ci:yaml:lint"
         ],
+        "ci:yaml:lint": "find . ! -path '*.Build/*' ! -path '*node_modules/*' -regextype egrep -regex '.*.ya?ml$' | xargs -r php ./.Build/bin/yaml-lint",
         "coverage:create-directories": "mkdir -p .Build/logs .Build/coverage",
         "docs:generate": [
             "@docs:generate:pullimage",
@@ -132,10 +132,10 @@
             "@fix:composer",
             "@fix:php"
         ],
-        "fix:composer:normalize": "@composer normalize --no-check-lock",
         "fix:composer": [
             "@fix:composer:normalize"
         ],
+        "fix:composer:normalize": "@composer normalize --no-check-lock",
         "fix:php": [
             "@fix:php:rector",
             "@fix:php:cs"
