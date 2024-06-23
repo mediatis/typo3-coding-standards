@@ -58,6 +58,8 @@ composer ci:php:cs-fixer
 composer ci:php:stan
 composer ci:php:tests:unit
 composer ci:php:tests:functional
+composer ci:yaml:lint
+composer ci:json:lint
 ```
 
 ## Usage - Fix
