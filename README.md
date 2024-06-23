@@ -30,41 +30,57 @@ Run the kickstart script to install configuration files. Pass the lowest TYPO3 m
 Run all checks:
 
 ```
-composer run-script ci
+composer ci
 ```
 
 Run group checks:
 
 ```
 # run all code quality checks
-composer run-script ci:static
+composer ci:static
 
 # all php tests and code quality checks
-composer run-script ci:php
+composer ci:php
+composer ci:composer
+composer ci:yaml
+composer ci:json
 ```
 
 Run specific checks:
 
 ```
-composer run-script ci:composer:normalize
-composer run-script ci:composer:psr-verify
-composer run-script ci:php:rector
-composer run-script ci:php:cs-fixer
-composer run-script ci:php:stan
+composer ci:composer:normalize
+composer ci:composer:psr-verify
+composer ci:composer:validate
+composer ci:php:lint
+composer ci:php:rector
+composer ci:php:cs-fixer
+composer ci:php:stan
+composer ci:php:tests:unit
+composer ci:php:tests:functional
+composer ci:yaml:lint
+composer ci:json:lint
 ```
 
 ## Usage - Fix
 
+Run all fixes:
+
+```
+composer fix
+```
+
 Run group fixes:
 
 ```
-composer run-script fix:php
+composer fix:composer
+composer fix:php
 ```
 
 Run specific fixes:
 
 ```
-composer run-script fix:php:rector
-composer run-script fix:php:cs
-composer run-script fix:composer:normalize
+composer fix:php:rector
+composer fix:php:cs
+composer fix:composer:normalize
 ```
