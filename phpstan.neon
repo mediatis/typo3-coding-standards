@@ -1,6 +1,2 @@
-parameters:
-  level: 6
-  paths:
-    - ../../../../Classes
-    - ../../../../Tests
-  reportUnmatchedIgnoredErrors: false
+includes:
+	- vendor/mediatis/coding-standards/phpstan.neon

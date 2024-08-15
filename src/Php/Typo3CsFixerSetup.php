@@ -14,6 +14,7 @@ class Typo3CsFixerSetup
         CsFixerSetup::setup($config);
 
         $config->getFinder()->in('Classes')->in('Configuration')->in('Tests');
+
         return $config;
     }
 }

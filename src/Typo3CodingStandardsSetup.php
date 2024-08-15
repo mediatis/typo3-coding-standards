@@ -35,7 +35,7 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
     protected function setupRectorConfig(): void
     {
         $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData('typo3', 'major');
-        if ($versionConstraint !== null && $versionConstraint !== []) {
+        if ($versionConstraint !== []) {
             $versionConstraint = reset($versionConstraint); // Only need the lowest supported version
             $sourceFilePath = 'rector-typo3-' . $versionConstraint . '.php';
             $this->updateFile($sourceFilePath, 'rector.php');
