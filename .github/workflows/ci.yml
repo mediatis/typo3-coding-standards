@@ -67,6 +67,16 @@ jobs:
                 sast: gl-sast-scanning-report.json
             paths:
                 - gl-sast-scanning-report.json
+        name: semgrep
+        runs-on: ubuntu-22.04
+        container:
+            image: semgrep/semgrep
+        if: "(github.actor != 'dependabot[bot]')"
+        steps:
+            -
+                uses: actions/checkout@v4
+            -
+                run: 'semgrep scan --config auto --error'
     trivy:
         stage: security-scanner
         image: 'docker:stable'
@@ -98,3 +108,18 @@ jobs:
         artifacts:
             reports:
                 container_scanning: gl-container-scanning-report.json
+        name: trivy
+        runs-on: ubuntu-22.04
+        steps:
+            -
+                name: 'Checkout code'
+                uses: actions/checkout@v3
+            -
+                name: 'Run Trivy vulnerability scanner in repo mode'
+                uses: aquasecurity/trivy-action@0.20.0
+                with:
+                    scan-type: fs
+                    ignore-unfixed: true
+                    format: sarif
+                    output: trivy-results.sarif
+                    severity: CRITICAL
