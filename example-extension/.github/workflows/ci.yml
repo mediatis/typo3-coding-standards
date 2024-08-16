@@ -46,24 +46,23 @@ jobs:
                 name: 'Run command'
                 run: "composer ci\n"
     trivy:
-      name: Trivy
-      runs-on: ubuntu-22.04
+      name: trivy
+      runs-on: ubuntu-latest
       steps:
-        - name: Checkout code
+        - name: 'Checkout code'
           uses: actions/checkout@v3
-
-        - name: Run Trivy vulnerability scanner in repo mode
+        - name: 'Run Trivy vulnerability scanner in repo mode'
           uses: aquasecurity/trivy-action@0.20.0
           with:
-            scan-type: 'fs'
-            ignore-unfixed: true
-            format: 'sarif'
-            output: 'trivy-results.sarif'
-            severity: 'CRITICAL'
-
+            scan-type: fs
+            scan-ref: .
+            format: table
+            vuln-type: library
+            severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+            exit-code: '1'
     semgrep:
       # User definable name of this GitHub Actions job.
-      name: Semgrep
+      name: semgrep
       # If you are self-hosting, change the following `runs-on` value:
       runs-on: ubuntu-latest
 
