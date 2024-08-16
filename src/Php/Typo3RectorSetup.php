@@ -20,7 +20,7 @@ class Typo3RectorSetup extends RectorSetup
     protected static int $typo3Version = 12;
 
     /**
-     * @return array<mixed>
+     * @return string[]
      */
     protected static function paths(string $packagePath): array
     {
