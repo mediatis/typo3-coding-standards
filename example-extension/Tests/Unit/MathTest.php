@@ -9,38 +9,38 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 class MathTest extends UnitTestCase
 {
-    public function testAddIntegers()
+    public function testAddIntegers(): void
     {
         $math = new Math();
         $result = $math->add(2, 3);
-        $this->assertEquals(5, $result);
+        self::assertEquals(5, $result);
     }
 
-    public function testAddFloats()
+    public function testAddFloats(): void
     {
         $math = new Math();
         $result = $math->add(2.5, 3.5);
-        $this->assertEquals(6.0, $result);
+        self::assertEquals(6.0, $result);
     }
 
-    public function testAddIntegerAndFloat()
+    public function testAddIntegerAndFloat(): void
     {
         $math = new Math();
         $result = $math->add(2, 3.5);
-        $this->assertEquals(5.5, $result);
+        self::assertEquals(5.5, $result);
     }
 
-    public function testAddFloatAndInteger()
+    public function testAddFloatAndInteger(): void
     {
         $math = new Math();
         $result = $math->add(2.5, 3);
-        $this->assertEquals(5.5, $result);
+        self::assertEquals(5.5, $result);
     }
 
-    public function testAddNegativeNumbers()
+    public function testAddNegativeNumbers(): void
     {
         $math = new Math();
         $result = $math->add(-2, -3);
-        $this->assertEquals(-5, $result);
+        self::assertEquals(-5, $result);
     }
 }

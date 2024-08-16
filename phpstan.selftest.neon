@@ -1,0 +1,6 @@
+includes:
+	- vendor/mediatis/coding-standards/phpstan.neon
+parameters:
+  level: 6
+  paths:
+  	- example-extension
