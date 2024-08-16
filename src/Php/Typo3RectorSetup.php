@@ -5,11 +5,12 @@ namespace Mediatis\Typo3CodingStandards\Php;
 use Exception;
 use Mediatis\CodingStandards\Php\RectorSetup;
 use Rector\Config\RectorConfig;
-// use Rector\Core\Configuration\Option;
 use Rector\Core\ValueObject\PhpVersion;
+// use Rector\Core\Configuration\Option;
 use Rector\PostRector\Rector\NameImportingPostRector;
 use Rector\Set\ValueObject\SetList;
 use Ssch\TYPO3Rector\Configuration\Typo3Option;
+use Ssch\TYPO3Rector\FileProcessor\TypoScript\Rector\v9\v0\FileIncludeToImportStatementTypoScriptRector;
 use Ssch\TYPO3Rector\Rector\General\ConvertImplicitVariablesToExplicitGlobalsRector;
 use Ssch\TYPO3Rector\Rector\General\ExtEmConfRector;
 use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
@@ -18,6 +19,9 @@ class Typo3RectorSetup extends RectorSetup
 {
     protected static int $typo3Version = 12;
 
+    /**
+     * @return string[]
+     */
     protected static function paths(string $packagePath): array
     {
         return [
@@ -73,11 +77,12 @@ class Typo3RectorSetup extends RectorSetup
         ];
         foreach ($typo3Criteria as $key => $value) {
             if (is_numeric($key)) {
-                array_push($criteria, $value);
+                $criteria[] = $value;
             } else {
                 $criteria[$key] = $value;
             }
         }
+
         return $criteria;
     }
 
@@ -139,6 +144,6 @@ class Typo3RectorSetup extends RectorSetup
         ]);
 
         // Modernize your TypoScript include statements for files and move from <INCLUDE /> to @import use the FileIncludeToImportStatementVisitor (introduced with TYPO3 9.0)
-        $rectorConfig->rule(\Ssch\TYPO3Rector\FileProcessor\TypoScript\Rector\v9\v0\FileIncludeToImportStatementTypoScriptRector::class);
+        $rectorConfig->rule(FileIncludeToImportStatementTypoScriptRector::class);
     }
 }

@@ -47,7 +47,7 @@
             "typo3/cms-composer-installers": true
         },
         "bin-dir": ".Build/bin",
-		"cache-dir": "./cache/composer",
+        "cache-dir": "./cache/composer",
         "vendor-dir": ".Build/vendor"
     },
     "extra": {
@@ -110,14 +110,6 @@
             "@ci:php",
             "@ci:yaml"
         ],
-        "coding-standards:reset": [
-            "./.Build/bin/mediatis-typo3-coding-standards-setup reset",
-            "@fix:composer"
-        ],
-        "coding-standards:update": [
-            "./.Build/bin/mediatis-typo3-coding-standards-setup",
-            "@fix:composer"
-        ],
         "ci:tests": [
             "@ci:tests:unit",
             "@ci:tests:functional"
@@ -128,6 +120,14 @@
             "@ci:yaml:lint"
         ],
         "ci:yaml:lint": "find . ! -path '*.Build/*' ! -path '*node_modules/*' -regextype egrep -regex '.*.ya?ml$' | xargs -r php ./.Build/bin/yaml-lint",
+        "coding-standards:reset": [
+            "./.Build/bin/mediatis-typo3-coding-standards-setup reset",
+            "@fix:composer"
+        ],
+        "coding-standards:update": [
+            "./.Build/bin/mediatis-typo3-coding-standards-setup",
+            "@fix:composer"
+        ],
         "coverage:create-directories": "mkdir -p .Build/logs .Build/coverage",
         "docs:generate": [
             "@docs:generate:pullimage",
