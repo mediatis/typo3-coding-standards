@@ -1,7 +1,7 @@
 parameters:
   level: 6
   paths:
-    - Classes
-    - Configuration
-    - Tests
+    - ../../../../Classes
+    - ../../../../Configuration
+    - ../../../../Tests
   reportUnmatchedIgnoredErrors: false
