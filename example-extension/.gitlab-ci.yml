@@ -12,13 +12,6 @@ code-quality:
             -
                 php_version: []
                 typo3_version: []
-    cache:
-        key:
-            files:
-                - composer.lock
-            prefix: 'php${php_version}-typo3{typo3_version}-'
-        paths:
-            - ./cache/composer
     before_script:
         - 'set -xe'
         - 'apt-get update -yqq'
