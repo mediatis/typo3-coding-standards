@@ -18,6 +18,7 @@ use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
 class Typo3RectorSetup extends RectorSetup
 {
     protected static int $typo3Version = 12;
+    protected static int $phpVersion = PhpVersion::PHP_81;
 
     /**
      * @return string[]
@@ -38,10 +39,15 @@ class Typo3RectorSetup extends RectorSetup
                 12 => Typo3LevelSetList::UP_TO_TYPO3_12,
                 default => throw new Exception(sprintf('unkonwn typo3 version "%s"', static::$typo3Version)),
             },
+            match (static::$phpVersion) {
+                PhpVersion::PHP_81 => SetList::PHP_81,
+                PhpVersion::PHP_82 => SetList::PHP_82,
+                PhpVersion::PHP_83 => SetList::PHP_83,
+                default => throw new Exception(sprintf('unkonwn php version "%s"', static::$phpVersion)),
+            },
             // Typo3SetList::DATABASE_TO_DBAL,
             // SetList::CODE_QUALITY,
             // SetList::DEAD_CODE,
-            SetList::PHP_81,
         ]);
 
         return array_unique($sets);
@@ -86,9 +92,10 @@ class Typo3RectorSetup extends RectorSetup
         return $criteria;
     }
 
-    public static function setup(RectorConfig $rectorConfig, string $packagePath, int $typo3Version = 12): void
+    public static function setup(RectorConfig $rectorConfig, string $packagePath, int $typo3Version = 11, int $phpVersion = PhpVersion::PHP_81): void
     {
         static::$typo3Version = $typo3Version;
+        static::$phpVersion = $phpVersion;
         parent::setup($rectorConfig, $packagePath);
 
         // If you want to override the number of spaces for your typoscript files you can define it here, the default value is 4
@@ -107,7 +114,7 @@ class Typo3RectorSetup extends RectorSetup
         // this will not import root namespace classes, like \DateTime or \Exception
         $rectorConfig->importShortClasses(false);
         // Define your target version which you want to support
-        $rectorConfig->phpVersion(PhpVersion::PHP_81);
+        $rectorConfig->phpVersion($phpVersion);
 
         // When you use rector there are rules that require some more actions like creating UpgradeWizards for outdated TCA types.
         // To fully support you we added some warnings. So watch out for them.
