@@ -7,6 +7,22 @@ use Mediatis\CodingStandards\CodingStandardsSetup;
 
 class Typo3CodingStandardsSetup extends CodingStandardsSetup
 {
+    public function setup(): void
+    {
+        parent::setup();
+        $this->updateFile('Build/phpunit/FunctionalTests.xml');
+        $this->updateFile('Build/phpunit/UnitTests.xml');
+        $this->updateFile('Build/Scripts/runTests.sh');
+    }
+
+    public function reset(): void
+    {
+        parent::reset();
+        $this->resetFile('Build/phpunit/FunctionalTests.xml');
+        $this->resetFile('Build/phpunit/UnitTests.xml');
+        $this->resetFile('Build/Scripts/runTests.sh');
+    }
+
     /**
      * @param array<string,mixed> $data
      *
