@@ -1,0 +1,8 @@
+.Build
+composer.lock
+.idea
+public
+vendor
+.ddev/*
+!/.ddev/config.yaml
+!/.ddev/php/

@@ -85,7 +85,7 @@
         ],
         "ci:coverage:unit": [
             "@coverage:create-directories",
-            ".Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml --whitelist Classes --coverage-php=.Build/coverage/unit.cov Tests/Unit"
+            ".Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml --whitelist Classes --coverage-php=,Build/coverage/unit.cov Tests/Unit"
         ],
         "ci:dynamic": [
             "@ci:tests"
@@ -114,7 +114,10 @@
             "@ci:tests:unit",
             "@ci:tests:functional"
         ],
-        "ci:tests:functional": "find 'Tests/Functional' -wholename '*Test.php' | echo \"Running functional test suite {}\"; .Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/FunctionalTests.xml;",
+        "ci:tests:functional": [
+            "@ci:tests:create-directories",
+            "find 'Tests/Functional' -wholename '*Test.php' | parallel --gnu 'echo; echo \\\"Running functional test suite {}\\\"; .Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/FunctionalTests.xml {}';"
+        ],
         "ci:tests:unit": ".Build/bin/phpunit -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml Tests/Unit",
         "ci:yaml": [
             "@ci:yaml:lint"

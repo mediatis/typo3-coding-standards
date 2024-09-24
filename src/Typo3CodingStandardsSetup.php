@@ -7,6 +7,42 @@ use Mediatis\CodingStandards\CodingStandardsSetup;
 
 class Typo3CodingStandardsSetup extends CodingStandardsSetup
 {
+    public function setup(): void
+    {
+        parent::setup();
+        $phpVersions = $this->getDependencyVersionConstraintsFromComposerData('php', '');
+        $this->updateFile('.ddev/config.yaml',
+            config: [
+                'name' => str_replace('_', '-', basename($this->targetPackageDirectory)),
+                'php_version' => $phpVersions[0],
+            ]
+        );
+        $this->updateFile('.ddev/php/custom-php.ini');
+    }
+
+    public function reset(): void
+    {
+        parent::reset();
+        $this->resetFile('.ddev/config.yaml');
+        $this->resetFile('.ddev/php/custom-php.ini');
+    }
+
+    /**
+     * @param array<mixed> $config
+     *
+     * @throws Exception
+     */
+    protected function updateFileContents(string $sourceContents, string $targetContents, string $filePath, array $config): string
+    {
+        return match ($filePath) {
+            'composer.json' => $this->updateFileContentsComposerJson($sourceContents, $targetContents, $config),
+            '.github/workflows/ci.yml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
+            '.gitlab-ci.yml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
+            '.ddev/config.yaml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
+            default => throw new Exception(sprintf('No information how to process "%s" found!', $filePath)),
+        };
+    }
+
     /**
      * @param array<string,mixed> $data
      *
