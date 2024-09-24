@@ -30,7 +30,7 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
     /**
      * @param array<mixed> $config
      *
-     * @throws JsonException
+     * @throws Exception
      */
     protected function updateFileContents(string $sourceContents, string $targetContents, string $filePath, array $config): string
     {
