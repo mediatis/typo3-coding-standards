@@ -13,7 +13,7 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
         $phpVersions = $this->getDependencyVersionConstraintsFromComposerData('php', '');
         $this->updateFile('.ddev/config.yaml',
             config: [
-                'name' => str_replace('_', '-', (string)basename($this->targetPackageDirectory)),
+                'name' => str_replace('_', '-', basename($this->targetPackageDirectory)),
                 'php_version' => $phpVersions[0],
             ]
         );
