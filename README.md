@@ -22,7 +22,13 @@ composer require --dev --with-all-dependencies mediatis/typo3-coding-standards
 Run the kickstart script to install configuration files. Pass the lowest TYPO3 major version number that your extension supports.
 
 ```
-./.Build/bin/mediatis-typo3-coding-standards-setup 11|12
+./.Build/bin/mediatis-typo3-coding-standards-setup
+```
+
+Start ddev in the extension folder
+
+```
+ddev start
 ```
 
 ## Usage - Check
@@ -30,36 +36,36 @@ Run the kickstart script to install configuration files. Pass the lowest TYPO3 m
 Run all checks:
 
 ```
-composer ci
+ddev composer ci
 ```
 
 Run group checks:
 
 ```
 # run all code quality checks
-composer ci:static
+ddev composer ci:static
 
 # all php tests and code quality checks
-composer ci:php
-composer ci:composer
-composer ci:yaml
-composer ci:json
+ddev composer ci:php
+ddev composer ci:composer
+ddev composer ci:yaml
+ddev composer ci:json
 ```
 
 Run specific checks:
 
 ```
-composer ci:composer:normalize
-composer ci:composer:psr-verify
-composer ci:composer:validate
-composer ci:php:lint
-composer ci:php:rector
-composer ci:php:cs-fixer
-composer ci:php:stan
-composer ci:php:tests:unit
-composer ci:php:tests:functional
-composer ci:yaml:lint
-composer ci:json:lint
+ddev composer ci:composer:normalize
+ddev composer ci:composer:psr-verify
+ddev composer ci:composer:validate
+ddev composer ci:php:lint
+ddev composer ci:php:rector
+ddev composer ci:php:cs-fixer
+ddev composer ci:php:stan
+ddev composer ci:php:tests:unit
+ddev composer ci:php:tests:functional
+ddev composer ci:yaml:lint
+ddev composer ci:json:lint
 ```
 
 ## Usage - Fix
@@ -67,20 +73,20 @@ composer ci:json:lint
 Run all fixes:
 
 ```
-composer fix
+ddev composer fix
 ```
 
 Run group fixes:
 
 ```
-composer fix:composer
-composer fix:php
+ddev composer fix:composer
+ddev composer fix:php
 ```
 
 Run specific fixes:
 
 ```
-composer fix:php:rector
-composer fix:php:cs
-composer fix:composer:normalize
+ddev composer fix:php:rector
+ddev composer fix:php:cs
+ddev composer fix:composer:normalize
 ```
