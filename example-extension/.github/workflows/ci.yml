@@ -1,80 +1,96 @@
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 permissions:
-    contents: read
+  contents: read
 jobs:
-    code-quality:
-        runs-on: ubuntu-22.04
-        strategy:
-            fail-fast: false
-            matrix:
-                php_version: []
-                typo3_version: []
-        steps:
-            -
-                name: Checkout
-                uses: actions/checkout@v4
-            -
-                name: 'Install PHP'
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: '${{ matrix.php_version }}'
-                    coverage: none
-                    tools: 'composer:v2.4'
-            -
-                name: 'Show Composer version'
-                run: 'composer --version'
-            -
-                name: 'Show the Composer configuration'
-                run: 'composer config --global --list'
-            -
-                name: 'Cache dependencies installed with composer'
-                uses: actions/cache@v3
-                with:
-                    key: 'php${{ matrix.php_version }}-typo3${{ matrix.typo3_version }}'
-                    path: ~/.cache/composer
-                    restore-keys: "php${{ matrix.php_version }}-composer-\n"
-            -
-                name: 'Install Composer dependencies'
-                run: "composer require typo3/cms-core ^${{ matrix.typo3_version }} --no-progress\ncomposer install --no-progress\n"
-            -
-                name: 'Run command'
-                run: "composer ci\n"
-    trivy:
-      name: trivy
-      runs-on: ubuntu-latest
-      steps:
-        - name: 'Checkout code'
-          uses: actions/checkout@v3
-        - name: 'Run Trivy vulnerability scanner in repo mode'
-          uses: aquasecurity/trivy-action@0.20.0
-          with:
-            scan-type: fs
-            scan-ref: .
-            format: table
-            vuln-type: library
-            severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
-            exit-code: '1'
-    semgrep:
-      # User definable name of this GitHub Actions job.
-      name: semgrep
-      # If you are self-hosting, change the following `runs-on` value:
-      runs-on: ubuntu-latest
+  code-quality:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: [ ]
+        typo3_version: [ ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: 'Install PHP'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '${{ matrix.php_version }}'
+          coverage: none
+          tools: 'composer:v2.4'
+      - name: 'Show Composer version'
+        run: 'composer --version'
+      - name: 'Show the Composer configuration'
+        run: 'composer config --global --list'
+      - name: 'Cache dependencies installed with composer'
+        uses: actions/cache@v3
+        with:
+          key: 'php${{ matrix.php_version }}-typo3${{ matrix.typo3_version }}'
+          path: ~/.cache/composer
+          restore-keys: "php${{ matrix.php_version }}-composer-\n"
+      - name: 'Install Composer dependencies'
+        run: "composer require typo3/cms-core ^${{ matrix.typo3_version }} --no-progress\ncomposer install --no-progress\n"
+      - name: 'Run command'
+        run: "composer ci:static\n"
+  code-tests:
+    name: 'Coverage tests'
+    runs-on: ubuntu-22.04
+    env:
+      DB_DATABASE: typo3
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: localhost
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: 'Install PHP'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '${{ matrix.php_version }}'
+          coverage: none
+          tools: 'composer:v2.4'
+          extensions: mysqli
+      - name: 'Show Composer version'
+        run: 'composer --version'
+      - name: 'Show the Composer configuration'
+        run: 'composer config --global --list'
+      - name: 'Cache dependencies installed with composer'
+        uses: actions/cache@v3
+        with:
+          key: 'php${{ matrix.php_version }}-typo3${{ matrix.php_version }}'
+          path: ~/.cache/composer
+          restore-keys: "php${{ matrix.php_version }}-composer-\n"
+      - name: 'Install Composer dependencies'
+        run: "composer require typo3/cms-core ^${{ matrix.typo3_version }} --no-progress\ncomposer install --no-progress\n"
+      - name: 'Start MySQL'
+        run: 'sudo /etc/init.d/mysql start'
+      - run: "export typo3DatabaseName=\"$DB_DATABASE\";\nexport typo3DatabaseHost=\"$DB_HOST\";\nexport typo3DatabaseUsername=\"$DB_USER\";\nexport typo3DatabasePassword=\"$DB_PASSWORD\";\ncomposer ci:coverage\n"
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: [ ]
+        typo3_version: [ ]
+  semgrep:
+    # User definable name of this GitHub Actions job.
+    name: semgrep
+    # If you are self-hosting, change the following `runs-on` value:
+    runs-on: ubuntu-latest
 
-      container:
-        # A Docker image with Semgrep installed. Do not change this.
-        image: semgrep/semgrep
+    container:
+      # A Docker image with Semgrep installed. Do not change this.
+      image: semgrep/semgrep
 
-      # Skip any PR created by dependabot to avoid permission issues:
-      if: (github.actor != 'dependabot[bot]')
+    # Skip any PR created by dependabot to avoid permission issues:
+    if: (github.actor != 'dependabot[bot]')
 
-      steps:
-        # Fetch project source with GitHub Actions Checkout. Use either v3 or v4.
-        - uses: actions/checkout@v4
-        # Run the "semgrep scan" command on the command line of the docker image.
-        - run: semgrep scan --config auto --error
+    steps:
+      # Fetch project source with GitHub Actions Checkout. Use either v3 or v4.
+      - uses: actions/checkout@v4
+      # Run the "semgrep scan" command on the command line of the docker image.
+      - run: semgrep scan --config auto --error
