@@ -20,6 +20,50 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
         $this->updateFile('.ddev/php/custom-php.ini');
     }
 
+    protected function setupCiPipeline(): void
+    {
+        $matrix = [];
+        foreach (array_keys($this->supportedPackageVersions) as $package) {
+            $matrix[$package . '_version'] = $this->getDependencyVersionConstraintsFromComposerData($package);
+        }
+
+        $this->updateFile('.gitlab-ci.yml',
+            config: [
+                'code-quality' => [
+                    'parallel' => [
+                        'matrix' => [
+                            $matrix,
+                        ],
+                    ],
+                ],
+                'code-tests' => [
+                    'parallel' => [
+                        'matrix' => [
+                            $matrix,
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        $this->updateFile('.github/workflows/ci.yml',
+            config: [
+                'jobs' => [
+                    'code-quality' => [
+                        'strategy' => [
+                            'matrix' => $matrix,
+                        ],
+                    ],
+                    'code-tests' => [
+                        'strategy' => [
+                            'matrix' => $matrix,
+                        ],
+                    ],
+                ],
+            ]
+        );
+    }
+
     public function reset(): void
     {
         parent::reset();

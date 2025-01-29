@@ -5,14 +5,13 @@ namespace Mediatis\Typo3CodingStandards\Php;
 use Exception;
 use Mediatis\CodingStandards\Php\RectorSetup;
 use Rector\Config\RectorConfig;
-use Rector\Core\ValueObject\PhpVersion;
-// use Rector\Core\Configuration\Option;
 use Rector\PostRector\Rector\NameImportingPostRector;
+// use Rector\Core\Configuration\Option;
 use Rector\Set\ValueObject\SetList;
+use Rector\ValueObject\PhpVersion;
+use Ssch\TYPO3Rector\CodeQuality\General\ConvertImplicitVariablesToExplicitGlobalsRector;
+use Ssch\TYPO3Rector\CodeQuality\General\ExtEmConfRector;
 use Ssch\TYPO3Rector\Configuration\Typo3Option;
-use Ssch\TYPO3Rector\FileProcessor\TypoScript\Rector\v9\v0\FileIncludeToImportStatementTypoScriptRector;
-use Ssch\TYPO3Rector\Rector\General\ConvertImplicitVariablesToExplicitGlobalsRector;
-use Ssch\TYPO3Rector\Rector\General\ExtEmConfRector;
 use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
 
 class Typo3RectorSetup extends RectorSetup
@@ -34,8 +33,8 @@ class Typo3RectorSetup extends RectorSetup
         $sets = parent::sets();
         array_push($sets, ...[
             match (static::$typo3Version) {
-                11 => Typo3LevelSetList::UP_TO_TYPO3_11,
                 12 => Typo3LevelSetList::UP_TO_TYPO3_12,
+                13 => Typo3LevelSetList::UP_TO_TYPO3_13,
                 default => throw new Exception(sprintf('unkonwn typo3 version "%s"', static::$typo3Version)),
             },
             // Typo3SetList::DATABASE_TO_DBAL,
@@ -142,8 +141,5 @@ class Typo3RectorSetup extends RectorSetup
         $rectorConfig->ruleWithConfiguration(ExtEmConfRector::class, [
             ExtEmConfRector::ADDITIONAL_VALUES_TO_BE_REMOVED => [],
         ]);
-
-        // Modernize your TypoScript include statements for files and move from <INCLUDE /> to @import use the FileIncludeToImportStatementVisitor (introduced with TYPO3 9.0)
-        $rectorConfig->rule(FileIncludeToImportStatementTypoScriptRector::class);
     }
 }
