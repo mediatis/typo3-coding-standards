@@ -13,6 +13,7 @@ use Ssch\TYPO3Rector\CodeQuality\General\ConvertImplicitVariablesToExplicitGloba
 use Ssch\TYPO3Rector\CodeQuality\General\ExtEmConfRector;
 use Ssch\TYPO3Rector\Configuration\Typo3Option;
 use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
+use Ssch\TYPO3Rector\TYPO313\v4\MigratePluginContentElementAndPluginSubtypesRector;
 
 class Typo3RectorSetup extends RectorSetup
 {
@@ -73,6 +74,7 @@ class Typo3RectorSetup extends RectorSetup
                 $packagePath . '/**/Configuration/*.php',
                 $packagePath . '/**/Configuration/**/*.php',
             ],
+            MigratePluginContentElementAndPluginSubtypesRector::class,
         ];
         foreach ($typo3Criteria as $key => $value) {
             if (is_numeric($key)) {
