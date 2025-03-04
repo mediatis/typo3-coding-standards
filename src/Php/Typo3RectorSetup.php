@@ -6,18 +6,20 @@ use Exception;
 use Mediatis\CodingStandards\Php\RectorSetup;
 use Rector\Config\RectorConfig;
 use Rector\PostRector\Rector\NameImportingPostRector;
-// use Rector\Core\Configuration\Option;
-use Rector\Set\ValueObject\SetList;
+use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 use Rector\ValueObject\PhpVersion;
 use Ssch\TYPO3Rector\CodeQuality\General\ConvertImplicitVariablesToExplicitGlobalsRector;
 use Ssch\TYPO3Rector\CodeQuality\General\ExtEmConfRector;
 use Ssch\TYPO3Rector\Configuration\Typo3Option;
 use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
+use Ssch\TYPO3Rector\Set\Typo3SetList;
 use Ssch\TYPO3Rector\TYPO313\v4\MigratePluginContentElementAndPluginSubtypesRector;
 
 class Typo3RectorSetup extends RectorSetup
 {
-    protected static int $typo3Version = 12;
+    protected static int $phpVersion;
+
+    protected static int $typo3Version;
 
     /**
      * @return string[]
@@ -38,10 +40,8 @@ class Typo3RectorSetup extends RectorSetup
                 13 => Typo3LevelSetList::UP_TO_TYPO3_13,
                 default => throw new Exception(sprintf('unkonwn typo3 version "%s"', static::$typo3Version)),
             },
-            // Typo3SetList::DATABASE_TO_DBAL,
-            // SetList::CODE_QUALITY,
-            // SetList::DEAD_CODE,
-            SetList::PHP_81,
+            Typo3SetList::CODE_QUALITY,
+            Typo3SetList::GENERAL,
         ]);
 
         return array_unique($sets);
@@ -87,10 +87,11 @@ class Typo3RectorSetup extends RectorSetup
         return $criteria;
     }
 
-    public static function setup(RectorConfig $rectorConfig, string $packagePath, int $typo3Version = 12): void
+    public static function setup(RectorConfig $rectorConfig, string $packagePath, int $typo3Version = 12, int $phpVersion = PhpVersion::PHP_82): void
     {
         static::$typo3Version = $typo3Version;
-        parent::setup($rectorConfig, $packagePath);
+        static::$phpVersion = $phpVersion;
+        parent::setup($rectorConfig, $packagePath, $phpVersion);
 
         // If you want to override the number of spaces for your typoscript files you can define it here, the default value is 4
         // $parameters = $rectorConfig->parameters();
@@ -108,7 +109,8 @@ class Typo3RectorSetup extends RectorSetup
         // this will not import root namespace classes, like \DateTime or \Exception
         $rectorConfig->importShortClasses(false);
         // Define your target version which you want to support
-        $rectorConfig->phpVersion(PhpVersion::PHP_81);
+        /** @phpstan-ignore-next-line  */
+        $rectorConfig->phpVersion($phpVersion);
 
         // When you use rector there are rules that require some more actions like creating UpgradeWizards for outdated TCA types.
         // To fully support you we added some warnings. So watch out for them.
@@ -139,7 +141,12 @@ class Typo3RectorSetup extends RectorSetup
             \Ssch\TYPO3Rector\FileProcessor\TypoScript\Rector\v10\v0\ExtbasePersistenceTypoScriptRector::FILENAME => $packagePath . '/packages/acme_demo/Configuration/Extbase/Persistence/Classes.php',
         ]); */
         // Add some general TYPO3 rules
-        $rectorConfig->rule(ConvertImplicitVariablesToExplicitGlobalsRector::class);
+        $rectorConfig->rules([
+            ConvertImplicitVariablesToExplicitGlobalsRector::class,
+            AddVoidReturnTypeWhereNoReturnRector::class,
+            ConvertImplicitVariablesToExplicitGlobalsRector::class,
+        ]);
+
         $rectorConfig->ruleWithConfiguration(ExtEmConfRector::class, [
             ExtEmConfRector::ADDITIONAL_VALUES_TO_BE_REMOVED => [],
         ]);

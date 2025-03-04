@@ -11,9 +11,10 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
     {
         parent::setup();
         $phpVersions = $this->getDependencyVersionConstraintsFromComposerData('php', '');
+        $packageName = $this->getPackageNameFromComposerData();
         $this->updateFile('.ddev/config.yaml',
             config: [
-                'name' => str_replace('_', '-', basename($this->targetPackageDirectory)),
+                'name' => str_replace('_', '-', $packageName),
                 'php_version' => $phpVersions[0],
             ]
         );
@@ -22,20 +23,14 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
 
     protected function setupCiPipeline(): void
     {
+        parent::setupCiPipeline();
         $matrix = [];
         foreach (array_keys($this->supportedPackageVersions) as $package) {
-            $matrix[$package . '_version'] = $this->getDependencyVersionConstraintsFromComposerData($package);
+            $matrix[$package . '_version'] = $this->getDependencyVersionConstraintsFromComposerData($package, outputType: 'string');
         }
 
         $this->updateFile('.gitlab-ci.yml',
             config: [
-                'code-quality' => [
-                    'parallel' => [
-                        'matrix' => [
-                            $matrix,
-                        ],
-                    ],
-                ],
                 'code-tests' => [
                     'parallel' => [
                         'matrix' => [
@@ -45,15 +40,14 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
                 ],
             ]
         );
+        $matrix = [];
+        foreach (array_keys($this->supportedPackageVersions) as $package) {
+            $matrix[$package . '_version'] = $this->getDependencyVersionConstraintsFromComposerData($package, outputType: 'string');
+        }
 
         $this->updateFile('.github/workflows/ci.yml',
             config: [
                 'jobs' => [
-                    'code-quality' => [
-                        'strategy' => [
-                            'matrix' => $matrix,
-                        ],
-                    ],
                     'code-tests' => [
                         'strategy' => [
                             'matrix' => $matrix,
@@ -69,22 +63,6 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
         parent::reset();
         $this->resetFile('.ddev/config.yaml');
         $this->resetFile('.ddev/php/custom-php.ini');
-    }
-
-    /**
-     * @param array<mixed> $config
-     *
-     * @throws Exception
-     */
-    protected function updateFileContents(string $sourceContents, string $targetContents, string $filePath, array $config): string
-    {
-        return match ($filePath) {
-            'composer.json' => $this->updateFileContentsComposerJson($sourceContents, $targetContents, $config),
-            '.github/workflows/ci.yml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
-            '.gitlab-ci.yml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
-            '.ddev/config.yaml' => $this->updateFileContentsYaml($sourceContents, $targetContents, $config),
-            default => throw new Exception(sprintf('No information how to process "%s" found!', $filePath)),
-        };
     }
 
     /**
@@ -114,11 +92,12 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
 
     protected function setupRectorConfig(): void
     {
-        $versionConstraint = $this->getDependencyVersionConstraintsFromComposerData('typo3', 'major');
-        if ($versionConstraint !== []) {
-            $versionConstraint = reset($versionConstraint); // Only need the lowest supported version
-            $sourceFilePath = 'rector-typo3-' . $versionConstraint . '.php';
-            $this->updateFile($sourceFilePath, 'rector.php');
+        parent::setupRectorConfig();
+        $typo3Versions = $this->getDependencyVersionConstraintsFromComposerData('typo3', 'major');
+        if ($typo3Versions !== []) {
+            $this->updateFile('rector.php', config: [
+                'TYPO3_VERSION_PLACEHOLDER' => $typo3Versions[0],
+            ]);
         } else {
             throw new Exception('Unable to set up rector due to version mismatch. Supported TYPO3 versions are: ' . implode(', ', $this->supportedPackageVersions['typo3']['versions']));
         }

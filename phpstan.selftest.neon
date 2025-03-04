@@ -3,4 +3,6 @@ includes:
 parameters:
   level: 6
   paths:
-  	- example-extension
+    - example-extension
+  excludePaths:
+    - example-extension/rector.php
