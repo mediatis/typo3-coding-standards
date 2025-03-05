@@ -142,9 +142,8 @@ class Typo3RectorSetup extends RectorSetup
         ]); */
         // Add some general TYPO3 rules
         $rectorConfig->rules([
-            ConvertImplicitVariablesToExplicitGlobalsRector::class,
             AddVoidReturnTypeWhereNoReturnRector::class,
-            ConvertImplicitVariablesToExplicitGlobalsRector::class,
+            ConvertImplicitVariablesToExplicitGlobalsRector::class
         ]);
 
         $rectorConfig->ruleWithConfiguration(ExtEmConfRector::class, [
