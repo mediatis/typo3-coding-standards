@@ -92,11 +92,17 @@ class Typo3CodingStandardsSetup extends CodingStandardsSetup
 
     protected function setupRectorConfig(): void
     {
-        parent::setupRectorConfig();
+        $phpVersions = $this->getDependencyVersionConstraintsFromComposerData('php', '');
+        $phpVersion = match ($phpVersions[0]) {
+            8.2 => 'PHP_82',
+            8.3 => 'PHP_83',
+            default => throw new Exception('Unable to set up rector due to version mismatch. Supported PHP versions are: ' . implode(', ', $this->supportedPackageVersions['php']['versions'])),
+        };
         $typo3Versions = $this->getDependencyVersionConstraintsFromComposerData('typo3', 'major');
         if ($typo3Versions !== []) {
             $this->updateFile('rector.php', config: [
                 'TYPO3_VERSION_PLACEHOLDER' => $typo3Versions[0],
+                'PHP_VERSION_PLACEHOLDER' => $phpVersion,
             ]);
         } else {
             throw new Exception('Unable to set up rector due to version mismatch. Supported TYPO3 versions are: ' . implode(', ', $this->supportedPackageVersions['typo3']['versions']));
