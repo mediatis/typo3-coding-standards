@@ -13,7 +13,6 @@ use Ssch\TYPO3Rector\CodeQuality\General\ExtEmConfRector;
 use Ssch\TYPO3Rector\Configuration\Typo3Option;
 use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
 use Ssch\TYPO3Rector\Set\Typo3SetList;
-use Ssch\TYPO3Rector\TYPO313\v4\MigratePluginContentElementAndPluginSubtypesRector;
 
 class Typo3RectorSetup extends RectorSetup
 {
@@ -68,13 +67,8 @@ class Typo3RectorSetup extends RectorSetup
             $packagePath . '/.github/*',
             $packagePath . '/.Build/*',
             NameImportingPostRector::class => [
-                'ext_localconf.php',
-                'ext_tables.php',
                 'ClassAliasMap.php',
-                $packagePath . '/**/Configuration/*.php',
-                $packagePath . '/**/Configuration/**/*.php',
             ],
-            MigratePluginContentElementAndPluginSubtypesRector::class,
         ];
         foreach ($typo3Criteria as $key => $value) {
             if (is_numeric($key)) {
@@ -143,7 +137,7 @@ class Typo3RectorSetup extends RectorSetup
         // Add some general TYPO3 rules
         $rectorConfig->rules([
             AddVoidReturnTypeWhereNoReturnRector::class,
-            ConvertImplicitVariablesToExplicitGlobalsRector::class
+            ConvertImplicitVariablesToExplicitGlobalsRector::class,
         ]);
 
         $rectorConfig->ruleWithConfiguration(ExtEmConfRector::class, [
