@@ -4,6 +4,7 @@ namespace Mediatis\Typo3CodingStandards\Php;
 
 use Mediatis\CodingStandards\Php\CsFixerSetup;
 use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
 use TYPO3\CodingStandards\CsFixerConfig;
 
 class Typo3CsFixerSetup
@@ -13,7 +14,15 @@ class Typo3CsFixerSetup
         $config = CsFixerConfig::create();
         CsFixerSetup::setup($config);
 
-        $config->getFinder()->in('Classes')->in('Configuration')->in('Tests');
+        $finder = $config->getFinder();
+        if ($finder instanceof Finder) {
+            $directories = ['Classes', 'Configuration', 'Tests'];
+            foreach ($directories as $directory) {
+                if (is_dir($directory)) {
+                    $finder->in($directory);
+                }
+            }
+        }
 
         return $config;
     }
