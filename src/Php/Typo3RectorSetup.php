@@ -67,6 +67,7 @@ class Typo3RectorSetup extends RectorSetup
             $packagePath . '/public/*',
             $packagePath . '/.github/*',
             $packagePath . '/.Build/*',
+            $packagePath . '/var/*',
             NameImportingPostRector::class => [
                 'ClassAliasMap.php',
             ],
