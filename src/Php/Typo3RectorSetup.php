@@ -37,6 +37,7 @@ class Typo3RectorSetup extends RectorSetup
             match (static::$typo3Version) {
                 12 => Typo3LevelSetList::UP_TO_TYPO3_12,
                 13 => Typo3LevelSetList::UP_TO_TYPO3_13,
+                14 => Typo3LevelSetList::UP_TO_TYPO3_14,
                 default => throw new Exception(sprintf('unkonwn typo3 version "%s"', static::$typo3Version)),
             },
             Typo3SetList::CODE_QUALITY,
