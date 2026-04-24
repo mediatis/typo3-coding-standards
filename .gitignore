@@ -6,3 +6,4 @@ vendor
 .ddev/*
 !/.ddev/config.yaml
 !/.ddev/php/
+var
