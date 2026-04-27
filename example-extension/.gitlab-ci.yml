@@ -22,7 +22,7 @@ code-quality:
     key:
       files:
         - composer.lock
-      prefix: 'php${php_version}-typo3{typo3_version}-'
+      prefix: 'php${php_version}-typo3${typo3_version}-'
     paths:
       - ./cache/composer
   before_script:
@@ -33,7 +33,6 @@ code-quality:
     - 'chmod +x /usr/local/bin/composer'
     - 'composer config cache-dir ./cache/composer'
     - 'cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini'
-    - 'awk ''/^error_reporting = E_ALL/{print "error_reporting = E_ALL & ~E_DEPRECATED"; next}1'' /usr/local/etc/php/php.ini > temp.ini && mv temp.ini /usr/local/etc/php/php.ini'
     - 'composer require typo3/cms-core ^${typo3_version} --no-progress --ignore-platform-req=ext-intl'
     - 'composer install --no-progress --ignore-platform-req=ext-intl'
   image: 'php:${php_version}'
@@ -49,7 +48,7 @@ code-tests:
     key:
       files:
         - composer.lock
-      prefix: 'php${php_version}-typo3{typo3_version}-'
+      prefix: 'php${php_version}-typo3${typo3_version}-'
     paths:
       - ./cache/composer
   before_script:
@@ -61,7 +60,6 @@ code-tests:
     - 'chmod +x /usr/local/bin/composer'
     - 'composer config cache-dir ./cache/composer'
     - 'cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini'
-    - 'awk ''/^error_reporting = E_ALL/{print "error_reporting = E_ALL & ~E_DEPRECATED"; next}1'' /usr/local/etc/php/php.ini > temp.ini && mv temp.ini /usr/local/etc/php/php.ini'
     - 'composer require typo3/cms-core ^${typo3_version} --no-progress --ignore-platform-req=ext-intl'
     - 'composer install --no-progress --ignore-platform-req=ext-intl'
   image: 'php:${php_version}'
@@ -69,7 +67,7 @@ code-tests:
   services:
     - mariadb:10
   script:
-    - 'composer ci:coverage'
+    - 'composer ci:dynamic'
 'semgrep':
   image: 'semgrep/semgrep'
   script: 'semgrep scan --config auto --error .'
