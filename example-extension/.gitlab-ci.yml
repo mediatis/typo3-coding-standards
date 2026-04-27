@@ -56,7 +56,6 @@ code-tests:
     - 'apt-get update -yqq'
     - 'apt-get install git libzip-dev unzip parallel libxml2-utils wget wait-for-it libicu-dev -yqq'
     - 'docker-php-ext-install mysqli && docker-php-ext-enable mysqli'
-    - 'pecl install pcov && docker-php-ext-enable pcov'
     - 'php -r "readfile(''http://getcomposer.org/installer'');" | php -- --install-dir=/usr/local/bin/ --filename=composer'
     - 'chmod +x /usr/local/bin/composer'
     - 'composer config cache-dir ./cache/composer'
@@ -68,7 +67,7 @@ code-tests:
   services:
     - mariadb:10
   script:
-    - 'composer ci:coverage'
+    - 'composer ci:dynamic'
 'semgrep':
   image: 'semgrep/semgrep'
   script: 'semgrep scan --config auto --error .'
