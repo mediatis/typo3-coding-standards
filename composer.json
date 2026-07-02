@@ -43,9 +43,6 @@
             "Mediatis\\Typo3CodingStandards\\": "src/"
         }
     },
-    "bin": [
-        "bin/mediatis-typo3-coding-standards-setup"
-    ],
     "config": {
         "allow-plugins": {
             "ergebnis/composer-normalize": true,
@@ -106,14 +103,6 @@
         ],
         "ci:tests": [
             "@ci:php:tests"
-        ],
-        "coding-standards:reset": [
-            "./vendor/bin/mediatis-coding-standards-setup reset",
-            "@fix:composer"
-        ],
-        "coding-standards:update": [
-            "./vendor/bin/mediatis-coding-standards-setup",
-            "@fix:composer"
         ],
         "fix": [
             "@fix:composer",

@@ -19,11 +19,15 @@ Install the TYPO3 coding-standards package.
 composer require --dev --with-all-dependencies mediatis/typo3-coding-standards
 ```
 
-Run the kickstart script to install configuration files. Pass the lowest TYPO3 major version number that your extension supports.
+Then generate the configuration files (`.php-cs-fixer.php`, `rector.php`, `phpstan.neon`, the GitLab/GitHub CI workflows, the `.ddev/` setup, the `composer ci` / `composer fix` scripts and the `Classes` / `Tests` folders) with the **`mediatis-typo3-coding-standards`** Claude Code skill.
 
-```
-./.Build/bin/mediatis-typo3-coding-standards-setup
-```
+In Claude Code, ask something like *"set up mediatis typo3 coding standards for this extension"*. The skill can:
+
+- **scaffold** a brand-new extension from scratch,
+- **add** the config to an existing extension (merging into `composer.json` without clobbering your keys), or
+- **reset** the generated files (overwrite drifted CI/config), the `composer.json` scripts being merged rather than replaced.
+
+The skill reads the supported PHP and TYPO3 versions from your `composer.json` and fills the CI matrix and rector targets accordingly — the same job the removed `mediatis-typo3-coding-standards-setup` binary used to do.
 
 Start ddev in the extension folder
 
